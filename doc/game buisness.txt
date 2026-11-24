@@ -1,0 +1,100 @@
+Here is a business brief you can copy and paste to your paid AI.
+
+MY PHOTO MY GAME: Business Idea
+
+Tagline: Your Photos. Your Games. Your Challenge.
+
+1. Concept
+
+An Android gaming app where players upload 5–10 of their own photos and play puzzle and brain games using only those photos. Players compete on global, weekly, monthly and per-game leaderboards. Only username, avatar and score are public. Photos always stay private.
+
+2. The problem and the hook
+Most puzzle games use stock images, so they feel impersonal.
+Playing with your own photos (family, friends, trips) is emotional, and that makes it shareable and habit-forming.
+Leaderboards add competition on top of that.
+3. Target audience
+
+Teenagers, students, young adults, couples, friends, families and casual gamers. Bangladesh and South Asia are the first market, with global reach later.
+
+4. Core product
+
+Four games
+
+Photo Puzzle (3×3, 4×4, 5×5, drag and drop)
+Memory Match (6, 8 or 10 photo pairs)
+Find the Difference (5 hidden differences)
+Sliding Photo Puzzle (3×3 and 4×4)
+
+Engagement features
+
+Virtual points (completion, difficulty, time and perfect-play bonuses)
+Levels and XP
+Achievements and badges
+Daily challenges
+Login streaks
+Game history and personal bests
+
+Social features
+
+Global, weekly, monthly and per-game leaderboards
+Public player profiles (username, avatar, rank, best scores, badges)
+Player search
+5. Privacy as a selling point
+Photos are stored in private storage and are never shown to other users.
+Email, photos and game sessions are never public.
+Users can delete their account and all their data.
+6. Business model
+
+Free plan (launch):
+
+Registration
+5 photos at first (a configurable maximum of 10)
+All four games
+All leaderboards
+
+Future premium (tentative price: BDT 99–199 per month, not confirmed):
+
+More photo storage
+Premium themes
+Advanced statistics
+Exclusive achievements
+Ad-free experience
+Extra customization
+
+Other possible revenue (to validate):
+
+Light, non-intrusive ads on the free plan
+Sponsored weekly tournaments
+Cosmetic avatar and theme packs
+
+Points are virtual only. They have no cash value and cannot be withdrawn. This avoids gambling and legal issues.
+
+7. Technology plan
+App: Flutter and Dart (Android)
+Backend: Java 21 with Spring Boot REST API
+Database: Supabase PostgreSQL
+Auth: Supabase Auth (email and Google)
+Photo storage: Supabase Private Storage
+Hosting: Render free tier, with GitHub for source control
+Security: row-level security, server-side score validation, protected credentials, duplicate-submission protection, and account-deletion cleanup
+8. Growth plan
+Build the MVP, covering all four games, leaderboards and a photo library with a 5-photo minimum.
+Run a closed beta with university and friend groups.
+Launch on the Play Store, with a share-your-score feature.
+Run weekly leaderboard events and a referral reward in virtual points.
+Gather data on retention, the share of players who reach 5 photos, and games played per day. Introduce premium once there is a stable user base.
+9. Key risks to check
+Cheating: scores must be validated on the server.
+Inappropriate photos: they are private, but you still need a policy and a report process.
+Free hosting limits: Render's free tier sleeps when idle, and storage costs grow with users.
+Retention: puzzle games are easily forgotten, so daily challenges and streaks are essential.
+Privacy and law compliance: privacy policy, terms of service, and data deletion requests.
+10. Questions to ask your paid AI
+A market and competitor analysis (existing photo puzzle apps)
+A realistic monetization and pricing check for Bangladesh
+A 3-month MVP roadmap and cost estimate
+A Play Store listing, name and marketing plan
+Database schema and API design
+A privacy policy and terms of service draft
+
+I also have a working single-file React prototype (MyPhotoMyGame.jsx). You can tell your paid AI it is the visual reference for the Flutter app.

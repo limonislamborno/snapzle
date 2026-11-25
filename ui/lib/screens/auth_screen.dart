@@ -112,11 +112,10 @@ class _AuthScreenState extends State<AuthScreen> {
           _mode = AuthMode.verifyOtp;
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Please verify your email. Enter the 6-digit OTP code.'),
-              backgroundColor: AppColors.primaryOrange,
-            ),
+          await _showMailSentDialog(
+            title: 'Email Not Verified',
+            message: 'Your email is not verified yet. Please enter the 6-digit code sent to:',
+            email: email,
           );
         }
         return;
@@ -136,21 +135,14 @@ class _AuthScreenState extends State<AuthScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.backgroundSecondary,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: AppColors.glassBorder, width: 1.2),
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: AppColors.glassBorder),
         ),
-        title: Row(
+        title: const Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.redAccent.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(LucideIcons.shieldAlert, color: Colors.redAccent, size: 24),
-            ),
-            const SizedBox(width: 10),
-            const Expanded(
+            Icon(LucideIcons.shieldAlert, color: AppColors.primaryOrange, size: 24),
+            SizedBox(width: 10),
+            Expanded(
               child: Text(
                 'Account Inactive',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
@@ -263,6 +255,13 @@ class _AuthScreenState extends State<AuthScreen> {
       if (res.session == null) {
         _otpController.clear();
         setState(() => _mode = AuthMode.verifyOtp);
+        if (mounted) {
+          await _showMailSentDialog(
+            title: 'Verification Code Sent',
+            message: 'A 6-digit verification code has been sent to your email address:',
+            email: email,
+          );
+        }
       }
     } on AuthException catch (e) {
       final msg = e.message.toLowerCase();
@@ -307,21 +306,14 @@ class _AuthScreenState extends State<AuthScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.backgroundSecondary,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: AppColors.glassBorder, width: 1.2),
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: AppColors.glassBorder),
         ),
-        title: Row(
+        title: const Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primaryOrange.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(LucideIcons.mailWarning, color: AppColors.primaryOrange, size: 22),
-            ),
-            const SizedBox(width: 10),
-            const Expanded(
+            Icon(LucideIcons.mailWarning, color: AppColors.primaryOrange, size: 24),
+            SizedBox(width: 10),
+            Expanded(
               child: Text(
                 'Already Registered',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
@@ -418,21 +410,14 @@ class _AuthScreenState extends State<AuthScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.backgroundSecondary,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: AppColors.glassBorder, width: 1.2),
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: AppColors.glassBorder),
         ),
-        title: Row(
+        title: const Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primaryOrange.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(LucideIcons.userX, color: AppColors.primaryOrange, size: 22),
-            ),
-            const SizedBox(width: 10),
-            const Expanded(
+            Icon(LucideIcons.userX, color: AppColors.primaryOrange, size: 24),
+            SizedBox(width: 10),
+            Expanded(
               child: Text(
                 'Username Taken',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
@@ -481,6 +466,19 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  Future<void> _showMailSentDialog({
+    required String title,
+    required String message,
+    required String email,
+  }) async {
+    return showAppNoticeDialog(
+      context,
+      title: title,
+      message: '$message\n\n$email\n\nPlease enter the verification code below to proceed.',
+      icon: LucideIcons.mailCheck,
+    );
+  }
+
   Future<void> _handleVerifyOtp() async {
     final email = _emailController.text.trim().toLowerCase();
     final cleanToken = _otpController.text.replaceAll(RegExp(r'\D'), '').trim();
@@ -490,8 +488,8 @@ class _AuthScreenState extends State<AuthScreen> {
       return;
     }
 
-    if (cleanToken.length < 6 || cleanToken.length > 8) {
-      setState(() => _errorMessage = 'Please enter a valid 6-digit verification code.');
+    if (cleanToken.length < 6) {
+      setState(() => _errorMessage = 'Please enter the verification code.');
       return;
     }
 
@@ -564,11 +562,10 @@ class _AuthScreenState extends State<AuthScreen> {
         await _supabase.auth.signInWithOtp(email: email);
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('A new 6-digit verification code has been sent to $email'),
-            backgroundColor: AppColors.accentEmerald,
-          ),
+        await _showMailSentDialog(
+          title: 'Verification Code Resent',
+          message: 'A fresh 6-digit verification code has been sent to:',
+          email: email,
         );
       }
     } on AuthException catch (e) {
@@ -600,11 +597,10 @@ class _AuthScreenState extends State<AuthScreen> {
         _otpController.clear();
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Verification code sent to $email'),
-            backgroundColor: AppColors.accentCyan,
-          ),
+        await _showMailSentDialog(
+          title: 'Reset Code Sent',
+          message: 'A 6-digit password reset code has been sent to:',
+          email: email,
         );
       }
     } on AuthException catch (e) {
@@ -626,8 +622,8 @@ class _AuthScreenState extends State<AuthScreen> {
       return;
     }
 
-    if (cleanToken.length < 6 || cleanToken.length > 8) {
-      setState(() => _errorMessage = 'Please enter a valid 6-digit OTP code.');
+    if (cleanToken.length < 6) {
+      setState(() => _errorMessage = 'Please enter the verification code.');
       return;
     }
 
@@ -653,11 +649,11 @@ class _AuthScreenState extends State<AuthScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password reset successful! Logging you in...'),
-            backgroundColor: AppColors.accentEmerald,
-          ),
+        await showAppNoticeDialog(
+          context,
+          title: 'Password Reset Successful',
+          message: 'Your password was reset successfully. Logging you in...',
+          icon: LucideIcons.circleCheck,
         );
       }
     } on AuthException catch (e) {
@@ -951,6 +947,7 @@ class _AuthScreenState extends State<AuthScreen> {
         TextField(
           controller: _otpController,
           keyboardType: TextInputType.number,
+          maxLength: 8,
           inputFormatters: [
             FilteringTextInputFormatter.digitsOnly,
             LengthLimitingTextInputFormatter(8),
@@ -1083,18 +1080,27 @@ class _AuthScreenState extends State<AuthScreen> {
         TextField(
           controller: _otpController,
           keyboardType: TextInputType.number,
-          maxLength: 6,
+          maxLength: 8,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(8),
+          ],
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 22, letterSpacing: 5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+          style: const TextStyle(
+            fontSize: 22,
+            letterSpacing: 4,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
           decoration: InputDecoration(
             counterText: '',
             filled: true,
             fillColor: AppColors.surfaceMuted,
-            hintText: 'Enter 6-digit OTP',
+            hintText: '123456',
             hintStyle: const TextStyle(
               color: AppColors.textMuted,
-              letterSpacing: 2,
-              fontSize: 14,
+              letterSpacing: 4,
+              fontSize: 16,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -1118,18 +1124,40 @@ class _AuthScreenState extends State<AuthScreen> {
           isLoading: _isLoading,
           onPressed: _handleResetPassword,
         ),
-        const SizedBox(height: 16),
-        Center(
-          child: TextButton(
-            onPressed: () => setState(() {
-              _mode = AuthMode.login;
-              _errorMessage = null;
-            }),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
+        const SizedBox(height: 14),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              onPressed: _isLoading ? null : _handleSendResetOtp,
+              child: const Text(
+                'Resend Code',
+                style: TextStyle(
+                  color: AppColors.primaryOrange,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-          ),
+            const Text(
+              '•',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            TextButton(
+              onPressed: () => setState(() {
+                _mode = AuthMode.login;
+                _errorMessage = null;
+              }),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

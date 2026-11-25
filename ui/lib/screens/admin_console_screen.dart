@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/avatar_view.dart';
+import '../widgets/quit_game_dialog.dart';
 
 class AdminConsoleScreen extends StatefulWidget {
   final bool isEmbedded;
@@ -126,14 +127,20 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> with SingleTick
           _allPhotos.removeWhere((p) => p['id'] == photo['id']);
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Photo deleted successfully'), backgroundColor: AppColors.accentEmerald),
+          await showAppNoticeDialog(
+            context,
+            title: 'Photo Deleted',
+            message: 'Photo deleted successfully.',
+            icon: LucideIcons.trash2,
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete photo: $e'), backgroundColor: Colors.redAccent),
+          await showAppNoticeDialog(
+            context,
+            title: 'Delete Failed',
+            message: 'Failed to delete photo: $e',
+            icon: LucideIcons.circleAlert,
           );
         }
       }
@@ -186,14 +193,20 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> with SingleTick
           _allPhotos.removeWhere((p) => p['user_id'] == userId);
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('All photos of @$username deleted'), backgroundColor: AppColors.accentEmerald),
+          await showAppNoticeDialog(
+            context,
+            title: 'Photos Deleted',
+            message: 'All photos of @$username deleted.',
+            icon: LucideIcons.trash2,
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete photos: $e'), backgroundColor: Colors.redAccent),
+          await showAppNoticeDialog(
+            context,
+            title: 'Delete Failed',
+            message: 'Failed to delete photos: $e',
+            icon: LucideIcons.circleAlert,
           );
         }
       }
@@ -227,14 +240,20 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> with SingleTick
         await _supabase.from('profiles').update({'points': 0}).eq('id', player['id']);
         await _loadAdminData();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Points reset for ${player['username']}'), backgroundColor: AppColors.accentEmerald),
+          await showAppNoticeDialog(
+            context,
+            title: 'Points Reset',
+            message: 'Points reset to 0 for ${player['username']}.',
+            icon: LucideIcons.rotateCcw,
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.redAccent),
+          await showAppNoticeDialog(
+            context,
+            title: 'Error',
+            message: 'Error: $e',
+            icon: LucideIcons.circleAlert,
           );
         }
       }
@@ -307,17 +326,20 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> with SingleTick
         await _supabase.from('profiles').update({'is_active': willActivate}).eq('id', player['id']);
         await _loadAdminData();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(willActivate ? '@$username is now Active' : '@$username is now Inactive (Suspended)'),
-              backgroundColor: willActivate ? AppColors.accentEmerald : Colors.redAccent,
-            ),
+          await showAppNoticeDialog(
+            context,
+            title: 'Status Updated',
+            message: willActivate ? '@$username is now Active' : '@$username is now Inactive (Suspended)',
+            icon: willActivate ? LucideIcons.circleCheck : LucideIcons.circleAlert,
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update status: $e'), backgroundColor: Colors.redAccent),
+          await showAppNoticeDialog(
+            context,
+            title: 'Error',
+            message: 'Failed to update status: $e',
+            icon: LucideIcons.circleAlert,
           );
         }
       }

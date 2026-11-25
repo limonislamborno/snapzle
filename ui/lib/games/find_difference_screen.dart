@@ -186,7 +186,7 @@ class _FindDifferenceScreenState extends State<FindDifferenceScreen> {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: AppColors.accentEmerald.withOpacity(0.6),
+                                        color: AppColors.accentEmerald.withValues(alpha: 0.6),
                                         blurRadius: 10,
                                       )
                                     ],

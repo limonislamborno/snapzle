@@ -434,51 +434,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            if (SupabaseService.isMasterAdmin) ...[
-              const SizedBox(height: 12),
-              InkWell(
-                onTap: () {
-                  MainShellScreen.switchTab(5);
-                },
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.brandGradient,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryOrange.withValues(alpha: 0.35),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(LucideIcons.shieldCheck, color: Colors.white, size: 26),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '👑 Master Admin Console',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                            ),
-                            Text(
-                              'Tap to inspect all players & view all uploaded user photos',
-                              style: TextStyle(color: Colors.white70, fontSize: 11),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(LucideIcons.chevronRight, color: Colors.white, size: 20),
-                    ],
-                  ),
-                ),
-              ),
-            ],
 
             const SizedBox(height: 20),
 
@@ -754,16 +709,13 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                           child: InkWell(
                             onTap: () {
                               if (!isUnlocked) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      dim == 4
-                                          ? '🔒 Need 5 different photos completed on 3×3 to unlock 4×4! ($prereqCount/5 done)'
-                                          : '🔒 Need 5 different photos completed on 4×4 to unlock 5×5! ($prereqCount/5 done)',
-                                    ),
-                                    duration: const Duration(seconds: 2),
-                                    backgroundColor: AppColors.backgroundSecondary,
-                                  ),
+                                showAppNoticeDialog(
+                                  context,
+                                  title: 'Level Locked',
+                                  message: dim == 4
+                                      ? 'Complete 5 different photos on 3×3 to unlock 4×4! ($prereqCount/5 done)'
+                                      : 'Complete 5 different photos on 4×4 to unlock 5×5! ($prereqCount/5 done)',
+                                  icon: LucideIcons.lock,
                                 );
                                 return;
                               }
@@ -958,14 +910,11 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                           child: InkWell(
                             onTap: () {
                               if (!isUnlocked) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      '🔒 Need 5 different photos completed on 3×3 to unlock 4×4! ($cleared3/5 done)',
-                                    ),
-                                    duration: const Duration(seconds: 2),
-                                    backgroundColor: AppColors.backgroundSecondary,
-                                  ),
+                                showAppNoticeDialog(
+                                  context,
+                                  title: 'Level Locked',
+                                  message: 'Complete 5 different photos on 3×3 to unlock 4×4! ($cleared3/5 done)',
+                                  icon: LucideIcons.lock,
                                 );
                                 return;
                               }
@@ -1135,16 +1084,13 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                         child: InkWell(
                           onTap: () {
                             if (!isUnlocked) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    pairs == 8
-                                        ? '🔒 Need 5 wins on 6-Pairs to unlock 8-Pairs! ($prereq/5 done)'
-                                        : '🔒 Need 5 wins on 8-Pairs to unlock 10-Pairs! ($prereq/5 done)',
-                                  ),
-                                  duration: const Duration(seconds: 2),
-                                  backgroundColor: AppColors.backgroundSecondary,
-                                ),
+                              showAppNoticeDialog(
+                                context,
+                                title: 'Level Locked',
+                                message: pairs == 8
+                                    ? 'Win 5 games on 6-Pairs to unlock 8-Pairs! ($prereq/5 done)'
+                                    : 'Win 5 games on 8-Pairs to unlock 10-Pairs! ($prereq/5 done)',
+                                icon: LucideIcons.lock,
                               );
                               return;
                             }
@@ -1625,7 +1571,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     final top3 = _leaderboard.length > 2 ? _leaderboard[2] : null;
 
     return Container(
-      padding: const EdgeInsets.only(top: 28, bottom: 4, left: 6, right: 6),
+      padding: const EdgeInsets.only(top: 32, bottom: 6, left: 4, right: 4),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(28),
@@ -1650,61 +1596,61 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 _podiumPillar(
                   rank: '#2',
                   player: top2,
-                  height: 105,
-                  width: 96,
+                  height: 114,
+                  width: 104,
                   color: AppColors.primaryBlue,
                   glowColor: const Color(0xFF38BDF8),
-                  ringColors: const [Color(0xFFE2E8F0), Color(0xFF94A3B8), Color(0xFF38BDF8)],
+                  ringColors: const [Color(0xFFFFFFFF), Color(0xFF94A3B8), Color(0xFF0284C7), Color(0xFFE2E8F0)],
                   currentUserId: currentUserId,
                   badgeIcon: LucideIcons.medal,
-                  avatarSize: 70,
+                  avatarSize: 96,
                   numeralWatermark: '2',
                   tierLabel: 'RUNNER UP',
                   scoreIcon: LucideIcons.flame,
                   isChampion: false,
                 )
               else
-                const SizedBox(width: 96),
+                const SizedBox(width: 104),
 
               if (top1 != null)
                 _podiumPillar(
                   rank: '#1',
                   player: top1,
-                  height: 140,
-                  width: 116,
+                  height: 154,
+                  width: 126,
                   color: AppColors.accentAmber,
                   glowColor: const Color(0xFFF59E0B),
-                  ringColors: const [Color(0xFFFFE082), Color(0xFFF59E0B), Color(0xFFD97706)],
+                  ringColors: const [Color(0xFFFFDF00), Color(0xFFF59E0B), Color(0xFFB45309), Color(0xFFFFE082)],
                   currentUserId: currentUserId,
                   badgeIcon: LucideIcons.crown,
-                  avatarSize: 90,
+                  avatarSize: 116,
                   numeralWatermark: '1',
                   tierLabel: 'CHAMPION',
                   scoreIcon: LucideIcons.sparkles,
                   isChampion: true,
                 )
               else
-                const SizedBox(width: 116),
+                const SizedBox(width: 126),
 
               if (top3 != null)
                 _podiumPillar(
                   rank: '#3',
                   player: top3,
-                  height: 82,
-                  width: 96,
+                  height: 88,
+                  width: 104,
                   color: AppColors.accentEmerald,
                   glowColor: const Color(0xFFEA580C),
-                  ringColors: const [Color(0xFFFFEDD5), Color(0xFFFB923C), Color(0xFFC2410C)],
+                  ringColors: const [Color(0xFFFFEDD5), Color(0xFFFB923C), Color(0xFF9A3412), Color(0xFFFDBA74)],
                   currentUserId: currentUserId,
-                  badgeIcon: LucideIcons.award,
-                  avatarSize: 66,
+                  badgeIcon: LucideIcons.trophy,
+                  avatarSize: 90,
                   numeralWatermark: '3',
                   tierLabel: '3RD PLACE',
-                  scoreIcon: LucideIcons.trophy,
+                  scoreIcon: LucideIcons.award,
                   isChampion: false,
                 )
               else
-                const SizedBox(width: 96),
+                const SizedBox(width: 104),
             ],
           ),
 
@@ -1770,7 +1716,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     final isMe = player['id'] == currentUserId;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 2.0),
       child: Column(
         children: [
 
@@ -1780,16 +1726,22 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             children: [
 
               Container(
-                width: avatarSize + 10,
-                height: avatarSize + 10,
+                width: avatarSize + (isChampion ? 26 : 18),
+                height: avatarSize + (isChampion ? 26 : 18),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: glowColor.withValues(alpha: isChampion ? 0.22 : 0.14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: glowColor.withValues(alpha: isChampion ? 0.48 : 0.32),
+                      blurRadius: isChampion ? 24 : 18,
+                      spreadRadius: isChampion ? 5 : 3,
+                    ),
+                  ],
                 ),
               ),
 
               Container(
-                padding: EdgeInsets.all(isChampion ? 4.0 : 3.0),
+                padding: EdgeInsets.all(isChampion ? 5.0 : 3.8),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
@@ -1798,43 +1750,59 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     end: Alignment.bottomRight,
                   ),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    width: isChampion ? 2.2 : 1.6,
+                    color: Colors.white,
+                    width: isChampion ? 2.8 : 2.0,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.20),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: AvatarView(
-                  photoUrl: avatarData['avatarUrl'],
-                  cartoonPhotoUrl: avatarData['cartoonUrl'],
-                  avatarStyle: avatarData['avatarStyle'],
-                  emoji: avatarData['emoji'],
-                  gradientIndex: avatarData['gradientIndex'],
-                  size: avatarSize,
-                  hasRing: false,
+                child: Container(
+                  padding: const EdgeInsets.all(2.5),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                  child: AvatarView(
+                    photoUrl: avatarData['avatarUrl'],
+                    cartoonPhotoUrl: avatarData['cartoonUrl'],
+                    avatarStyle: avatarData['avatarStyle'],
+                    emoji: avatarData['emoji'],
+                    gradientIndex: avatarData['gradientIndex'],
+                    size: avatarSize,
+                    hasRing: false,
+                  ),
                 ),
               ),
 
               Positioned(
-                top: isChampion ? -22 : -16,
+                top: isChampion ? -24 : -18,
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: isChampion ? 8 : 6,
-                    vertical: isChampion ? 4 : 3,
+                    horizontal: isChampion ? 10 : 8,
+                    vertical: isChampion ? 4.5 : 3.5,
                   ),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: isChampion
-                          ? [const Color(0xFFFFFBEB), const Color(0xFFFDE68A)]
-                          : [Colors.white, const Color(0xFFF1F5F9)],
+                          ? const [Color(0xFFFFFBEB), Color(0xFFFDE68A), Color(0xFFF59E0B)]
+                          : [Colors.white, ringColors.first],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
                     ),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: glowColor.withValues(alpha: 0.8),
+                      color: isChampion ? const Color(0xFFD97706) : glowColor.withValues(alpha: 0.8),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: glowColor.withValues(alpha: 0.45),
-                        blurRadius: 8,
+                        color: glowColor.withValues(alpha: 0.50),
+                        blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
                     ],
@@ -1844,18 +1812,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     children: [
                       Icon(
                         badgeIcon,
-                        color: glowColor,
-                        size: isChampion ? 18 : 13,
+                        color: isChampion ? const Color(0xFFB45309) : glowColor,
+                        size: isChampion ? 19 : 14,
                       ),
                       if (isChampion) ...[
-                        const SizedBox(width: 3),
+                        const SizedBox(width: 4),
                         const Text(
                           'MVP',
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w900,
                             color: Color(0xFFB45309),
-                            letterSpacing: 0.5,
+                            letterSpacing: 0.6,
                           ),
                         ),
                       ],
@@ -1865,31 +1833,45 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               ),
 
               Positioned(
-                bottom: -8,
+                bottom: isChampion ? -11 : -9,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isChampion ? 12 : 9,
+                    vertical: isChampion ? 3.5 : 2.5,
+                  ),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [glowColor, glowColor.withValues(alpha: 0.85)],
+                      colors: [glowColor, glowColor.withValues(alpha: 0.90)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
                     ),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.white, width: 1.5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white, width: isChampion ? 2.2 : 1.6),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.25),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+                        color: Colors.black.withValues(alpha: 0.28),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
-                  child: Text(
-                    rank,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.4,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isChampion) ...[
+                        const Icon(LucideIcons.sparkles, color: Colors.white, size: 11),
+                        const SizedBox(width: 3),
+                      ],
+                      Text(
+                        rank,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isChampion ? 13 : 11.5,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -2050,8 +2032,11 @@ class _PhotoLibraryScreenState extends State<PhotoLibraryScreen> {
 
   Future<void> _pickAndUploadPhoto() async {
     if (_photos.length >= 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Free vault limit reached (10 photos max).')),
+      await showAppNoticeDialog(
+        context,
+        title: 'Vault Limit',
+        message: 'Free vault limit reached (10 photos max).',
+        icon: LucideIcons.circleAlert,
       );
       return;
     }
@@ -2069,20 +2054,20 @@ class _PhotoLibraryScreenState extends State<PhotoLibraryScreen> {
       await SupabaseService.uploadPhoto(file);
       await _loadPhotos();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: AppColors.accentEmerald,
-            content: Text('Photo securely uploaded to your private vault!'),
-          ),
+        await showAppNoticeDialog(
+          context,
+          title: 'Photo Uploaded',
+          message: 'Photo securely encrypted and added to your private vault.',
+          icon: LucideIcons.shieldCheck,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.redAccent,
-            content: Text('Upload failed: $e'),
-          ),
+        await showAppNoticeDialog(
+          context,
+          title: 'Upload Failed',
+          message: 'Upload failed: $e',
+          icon: LucideIcons.circleAlert,
         );
       }
     } finally {
@@ -2095,16 +2080,39 @@ class _PhotoLibraryScreenState extends State<PhotoLibraryScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.backgroundSecondary,
-        title: const Text('Delete Photo?'),
-        content: const Text('This will permanently delete this photo from your private vault.'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: AppColors.glassBorder),
+        ),
+        title: const Row(
+          children: [
+            Icon(LucideIcons.circleAlert, color: AppColors.primaryOrange, size: 24),
+            SizedBox(width: 10),
+            Text(
+              'Delete Photo?',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.textPrimary),
+            ),
+          ],
+        ),
+        content: const Text(
+          'This will permanently delete this photo from your private vault.',
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
           ),
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryOrange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              elevation: 0,
+            ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
+            child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -2117,8 +2125,11 @@ class _PhotoLibraryScreenState extends State<PhotoLibraryScreen> {
       _loadPhotos();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete: $e')),
+        await showAppNoticeDialog(
+          context,
+          title: 'Delete Failed',
+          message: 'Failed to delete: $e',
+          icon: LucideIcons.circleAlert,
         );
       }
     }
@@ -2314,20 +2325,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _avatarCartoonUrl = result['cartoon'];
           _avatarStyle = 'original';
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: AppColors.accentEmerald,
-            content: Text('Profile photo and cartoon avatar ready!'),
-          ),
+        await showAppNoticeDialog(
+          context,
+          title: 'Photo Uploaded',
+          message: 'Your profile photo and AI cartoon avatar have been created successfully.',
+          icon: LucideIcons.camera,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.redAccent,
-            content: Text('Failed to update avatar: $e'),
-          ),
+        await showAppNoticeDialog(
+          context,
+          title: 'Upload Failed',
+          message: 'Failed to update avatar: $e',
+          icon: LucideIcons.circleAlert,
         );
       }
     } finally {
@@ -2340,13 +2351,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (newStyle == 'cartoon' && (_avatarCartoonUrl == null || _avatarCartoonUrl!.isEmpty)) {
       setState(() => _isGeneratingCartoon = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          duration: Duration(seconds: 1),
-          backgroundColor: AppColors.backgroundSecondary,
-          content: Text('🎨 Generating accurate cartoon portrait...'),
-        ),
-      );
       final generatedUrl = await SupabaseService.generateCartoonForCurrentAvatar();
       if (mounted) {
         setState(() {
@@ -2360,16 +2364,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       await SupabaseService.updateAvatarStyle(newStyle);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            duration: const Duration(seconds: 1),
-            backgroundColor: AppColors.backgroundSecondary,
-            content: Text(
-              newStyle == 'cartoon'
-                  ? '🎨 Switched to Cartoon Gamer avatar!'
-                  : '📷 Switched to Original Photo avatar!',
-            ),
-          ),
+        await showAppNoticeDialog(
+          context,
+          title: newStyle == 'cartoon' ? 'Cartoon Avatar Active' : 'Original Photo Active',
+          message: newStyle == 'cartoon'
+              ? 'Your AI cartoon avatar is now active across all games and leaderboards.'
+              : 'Your original profile picture is now active across all games and leaderboards.',
+          icon: newStyle == 'cartoon' ? LucideIcons.sparkles : LucideIcons.camera,
         );
       }
     } catch (_) {}
@@ -2392,7 +2393,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16.0),
               children: [
-          Center(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'My Profile',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () async {
+                        GameProgressService.resetInMemory();
+                        SupabaseService.cachedPhotos.clear();
+                        await Supabase.instance.client.auth.signOut();
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryOrange.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.primaryOrange.withValues(alpha: 0.45),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primaryOrange.withValues(alpha: 0.15),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(LucideIcons.logOut, size: 14, color: AppColors.primaryOrange),
+                            SizedBox(width: 6),
+                            Text(
+                              'Sign Out',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryOrange,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Center(
             child: Column(
               children: [
                 Stack(
@@ -2446,28 +2503,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 12),
                 if (_avatarUrl != null) ...[
 
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceMuted,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.glassBorder),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _styleToggleChip(
+                            label: 'Original',
+                            icon: LucideIcons.camera,
+                            isSelected: _avatarStyle == 'original',
+                            onTap: () => _selectAvatarStyle('original'),
+                          ),
+                          const SizedBox(width: 4),
+                          _styleToggleChip(
+                            label: _isGeneratingCartoon ? 'Toonifying...' : 'Cartoon',
+                            icon: _isGeneratingCartoon ? LucideIcons.loader : LucideIcons.sparkles,
+                            isSelected: _avatarStyle == 'cartoon',
+                            onTap: _isGeneratingCartoon ? () {} : () => _selectAvatarStyle('cartoon'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceMuted,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.glassBorder),
+                      color: AppColors.backgroundSecondary,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: (_avatarStyle == 'cartoon' ? AppColors.primary : AppColors.primaryOrange).withValues(alpha: 0.3),
+                        width: 1.1,
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _styleToggleChip(
-                          label: 'Original',
-                          icon: LucideIcons.camera,
-                          isSelected: _avatarStyle == 'original',
-                          onTap: () => _selectAvatarStyle('original'),
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: (_avatarStyle == 'cartoon' ? AppColors.primary : AppColors.primaryOrange).withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            _avatarStyle == 'cartoon' ? LucideIcons.sparkles : LucideIcons.camera,
+                            size: 13,
+                            color: _avatarStyle == 'cartoon' ? AppColors.primary : AppColors.primaryOrange,
+                          ),
                         ),
-                        const SizedBox(width: 4),
-                        _styleToggleChip(
-                          label: _isGeneratingCartoon ? 'Toonifying...' : 'Cartoon',
-                          icon: _isGeneratingCartoon ? LucideIcons.loader : LucideIcons.sparkles,
-                          isSelected: _avatarStyle == 'cartoon',
-                          onTap: _isGeneratingCartoon ? () {} : () => _selectAvatarStyle('cartoon'),
+                        const SizedBox(width: 8),
+                        Text(
+                          _avatarStyle == 'cartoon'
+                              ? 'Active: Cartoon Gamer Avatar'
+                              : 'Active: Original Photo Avatar',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: _avatarStyle == 'cartoon' ? AppColors.primary : AppColors.primaryOrange,
+                          ),
                         ),
                       ],
                     ),
@@ -2527,19 +2626,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 12),
 
-          GamingButton(
-            label: 'Sign Out',
-            color: AppColors.surfaceMuted,
-            textColor: AppColors.textPrimary,
-            border: Border.all(color: AppColors.glassBorder, width: 1.2),
-            icon: LucideIcons.logOut,
-            onPressed: () async {
-              GameProgressService.resetInMemory();
-              SupabaseService.cachedPhotos.clear();
-              await Supabase.instance.client.auth.signOut();
-            },
-          ),
-          const SizedBox(height: 12),
 
           GamingButton(
             label: 'Delete Account Permanently',
@@ -2683,20 +2769,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
         await SupabaseService.resetUserData(resetGames: resetGames, resetPhotos: resetPhotos);
         await _loadProfile();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              backgroundColor: AppColors.accentEmerald,
-              content: Text('Selected data successfully reset!'),
-            ),
+          await showAppNoticeDialog(
+            context,
+            title: 'Data Reset',
+            message: 'Selected data successfully reset!',
+            icon: LucideIcons.circleCheck,
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: Colors.redAccent,
-              content: Text('Reset failed: $e'),
-            ),
+          await showAppNoticeDialog(
+            context,
+            title: 'Reset Failed',
+            message: 'Reset failed: $e',
+            icon: LucideIcons.circleAlert,
           );
         }
       } finally {
@@ -2771,11 +2857,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       } catch (e) {
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: Colors.redAccent,
-              content: Text('Failed to delete account: $e'),
-            ),
+          await showAppNoticeDialog(
+            context,
+            title: 'Delete Failed',
+            message: 'Failed to delete account: $e',
+            icon: LucideIcons.circleAlert,
           );
         }
       }

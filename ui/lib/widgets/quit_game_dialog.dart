@@ -151,3 +151,54 @@ Future<bool> showLeavePageConfirmation(
   );
   return result ?? false;
 }
+
+Future<void> showAppNoticeDialog(
+  BuildContext context, {
+  required String title,
+  required String message,
+  IconData icon = LucideIcons.circleAlert,
+  String buttonLabel = 'OK',
+}) async {
+  return showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: AppColors.backgroundSecondary,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: const BorderSide(color: AppColors.glassBorder),
+      ),
+      titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+      actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      title: Row(
+        children: [
+          Icon(icon, color: AppColors.primaryOrange, size: 24),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.textPrimary),
+            ),
+          ),
+        ],
+      ),
+      content: Text(
+        message,
+        style: const TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.4),
+      ),
+      actions: [
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryOrange,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+            elevation: 0,
+          ),
+          onPressed: () => Navigator.pop(ctx),
+          child: Text(buttonLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ),
+      ],
+    ),
+  );
+}

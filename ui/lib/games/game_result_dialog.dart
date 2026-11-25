@@ -161,7 +161,7 @@ class _GameResultDialogState extends State<GameResultDialog> {
                   },
                   child: Text(
                     'Back to Games',
-                    style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                   ),
                 ),
               ],

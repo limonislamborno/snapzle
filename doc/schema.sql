@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     avatar_url TEXT,
     avatar_cartoon_url TEXT,
     avatar_style VARCHAR(20) DEFAULT 'original',
+    email VARCHAR(255),
+    is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -157,6 +159,10 @@ DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 CREATE POLICY "Users can update their own profile"
     ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can delete their own profile" ON public.profiles;
+CREATE POLICY "Users can delete their own profile"
+    ON public.profiles FOR DELETE TO authenticated USING (auth.uid() = id);
+
 -- Photos: 100% PRIVATE to owner
 DROP POLICY IF EXISTS "Users can view their own photos only" ON public.photos;
 CREATE POLICY "Users can view their own photos only"
@@ -235,9 +241,9 @@ BEGIN
         'Player_' || SUBSTRING(NEW.id::text, 1, 6)
     );
 
-    INSERT INTO public.profiles (id, username, avatar_emoji, avatar_gradient)
-    VALUES (NEW.id, clean_username, '🦊', 0)
-    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO public.profiles (id, username, email, is_active, avatar_emoji, avatar_gradient)
+    VALUES (NEW.id, clean_username, NEW.email, TRUE, '🦊', 0)
+    ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
 
     RETURN NEW;
 END;
@@ -247,3 +253,54 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ====================================================================
+-- 9. RPC FUNCTION: DELETE USER ACCOUNT PERMANENTLY
+-- ====================================================================
+CREATE OR REPLACE FUNCTION public.delete_user_account()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+BEGIN
+    -- Delete from auth.users (cascades to public.profiles, photos, game_sessions, etc.)
+    DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.delete_user_account() TO authenticated;
+
+-- ====================================================================
+-- 10. ADMIN POLICIES (FOR 'limonislamborno@gmail.com')
+-- ====================================================================
+-- Allow Master Admin to update profiles (Active/Inactive status & reset points)
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Profiles updatable by owner or admin" ON public.profiles;
+CREATE POLICY "Profiles updatable by owner or admin"
+    ON public.profiles FOR UPDATE TO authenticated
+    USING (auth.jwt() ->> 'email' = 'limonislamborno@gmail.com' OR auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can view their own photos only" ON public.photos;
+DROP POLICY IF EXISTS "Photos viewable by owner or admin" ON public.photos;
+CREATE POLICY "Photos viewable by owner or admin"
+    ON public.photos FOR SELECT TO authenticated
+    USING (auth.jwt() ->> 'email' = 'limonislamborno@gmail.com' OR auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete their own photos" ON public.photos;
+DROP POLICY IF EXISTS "Photos deletable by owner or admin" ON public.photos;
+CREATE POLICY "Photos deletable by owner or admin"
+    ON public.photos FOR DELETE TO authenticated
+    USING (auth.jwt() ->> 'email' = 'limonislamborno@gmail.com' OR auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can view own photos in storage" ON storage.objects;
+DROP POLICY IF EXISTS "Storage viewable by owner or admin" ON storage.objects;
+CREATE POLICY "Storage viewable by owner or admin"
+    ON storage.objects FOR SELECT TO authenticated
+    USING (bucket_id = 'user-photos' AND (auth.jwt() ->> 'email' = 'limonislamborno@gmail.com' OR auth.uid()::text = (storage.foldername(name))[1]));
+
+DROP POLICY IF EXISTS "Users can delete own photos in storage" ON storage.objects;
+DROP POLICY IF EXISTS "Storage deletable by owner or admin" ON storage.objects;
+CREATE POLICY "Storage deletable by owner or admin"
+    ON storage.objects FOR DELETE TO authenticated
+    USING (bucket_id = 'user-photos' AND (auth.jwt() ->> 'email' = 'limonislamborno@gmail.com' OR auth.uid()::text = (storage.foldername(name))[1]));

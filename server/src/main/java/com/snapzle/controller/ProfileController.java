@@ -41,4 +41,10 @@ public class ProfileController {
         profileService.recordDailyLogin(userId);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/account")
+    public ResponseEntity<Void> deleteMyAccount(@AuthenticationPrincipal UUID userId) {
+        profileService.deleteAccount(userId);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -2,7 +2,10 @@ package com.snapzle.service;
 
 import com.snapzle.dto.ProfileDto;
 import com.snapzle.entity.Profile;
+import com.snapzle.repo.GameSessionRepository;
+import com.snapzle.repo.PhotoRepository;
 import com.snapzle.repo.ProfileRepository;
+import com.snapzle.repo.UserGameBestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +18,9 @@ import java.util.UUID;
 public class ProfileService {
 
     private final ProfileRepository profileRepository;
+    private final PhotoRepository photoRepository;
+    private final GameSessionRepository gameSessionRepository;
+    private final UserGameBestRepository userGameBestRepository;
 
     public ProfileDto getProfile(UUID userId) {
         Profile profile = profileRepository.findById(userId)
@@ -49,6 +55,14 @@ public class ProfileService {
 
         profile.setLastLoginDate(today);
         profileRepository.save(profile);
+    }
+
+    @Transactional
+    public void deleteAccount(UUID userId) {
+        photoRepository.deleteByUserId(userId);
+        gameSessionRepository.deleteByUserId(userId);
+        userGameBestRepository.deleteByUserId(userId);
+        profileRepository.deleteById(userId);
     }
 
     private ProfileDto toDto(Profile p) {

@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-/// Cartoon Game Icon Badge wrapper with comic-styled frame, sunburst backdrop, and 3D depth
 class CartoonGameBadge extends StatelessWidget {
   final Widget iconWidget;
   final List<Color> bgGradient;
@@ -23,7 +22,7 @@ class CartoonGameBadge extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Main cartoon frame container
+
         Container(
           width: size,
           height: size,
@@ -39,13 +38,13 @@ class CartoonGameBadge extends StatelessWidget {
               width: 3.0,
             ),
             boxShadow: [
-              // Dark cartoon drop shadow
+
               BoxShadow(
                 color: const Color(0xFF0F0B1E).withValues(alpha: 0.9),
                 blurRadius: 0,
                 offset: const Offset(0, 4),
               ),
-              // Vibrant color glow
+
               BoxShadow(
                 color: glowColor.withValues(alpha: 0.5),
                 blurRadius: 16,
@@ -57,13 +56,13 @@ class CartoonGameBadge extends StatelessWidget {
             borderRadius: BorderRadius.circular(15),
             child: Stack(
               children: [
-                // Subtle cartoon sunburst / diagonal stripe effect
+
                 Positioned.fill(
                   child: CustomPaint(
                     painter: _SunburstPainter(glowColor.withValues(alpha: 0.15)),
                   ),
                 ),
-                // Top gloss shine bubble
+
                 Positioned(
                   top: 2,
                   left: 6,
@@ -83,14 +82,13 @@ class CartoonGameBadge extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Center cartoon illustration
+
                 Center(child: iconWidget),
               ],
             ),
           ),
         ),
 
-        // Corner shiny cartoon tag
         Positioned(
           bottom: -4,
           right: -4,
@@ -121,7 +119,6 @@ class CartoonGameBadge extends StatelessWidget {
   }
 }
 
-/// Cartoon Sunburst Background Painter
 class _SunburstPainter extends CustomPainter {
   final Color rayColor;
   _SunburstPainter(this.rayColor);
@@ -157,9 +154,6 @@ class _SunburstPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// =========================================================================
-// 1. CARTOON PHOTO PUZZLE ILLUSTRATION (Two interlocking cartoon pieces)
-// =========================================================================
 class CartoonPuzzleIllustration extends StatelessWidget {
   final double size;
   const CartoonPuzzleIllustration({super.key, this.size = 46});
@@ -182,7 +176,6 @@ class _CartoonPuzzlePainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Piece 1: Purple / Fuchsia piece (background piece)
     final p1 = Paint()
       ..shader = const LinearGradient(
         colors: [Color(0xFFE879F9), Color(0xFFA855F7)],
@@ -202,23 +195,20 @@ class _CartoonPuzzlePainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: 0.8)
       ..style = PaintingStyle.fill;
 
-    // Draw background purple piece
     final r1 = RRect.fromRectAndRadius(
       Rect.fromLTWH(w * 0.08, h * 0.12, w * 0.44, h * 0.44),
       const Radius.circular(8),
     );
-    // Shadow under r1
+
     canvas.drawRRect(r1.shift(const Offset(0, 3)), p1Shadow);
     canvas.drawRRect(r1, p1);
     canvas.drawRRect(r1, inkBorder);
 
-    // Tab for piece 1 protruding right
     final tab1 = Path()
       ..addOval(Rect.fromCircle(center: Offset(w * 0.52, h * 0.34), radius: w * 0.12));
     canvas.drawPath(tab1, p1);
     canvas.drawPath(tab1, inkBorder);
 
-    // Gloss on piece 1
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(w * 0.12, h * 0.16, w * 0.22, h * 0.08),
@@ -227,7 +217,6 @@ class _CartoonPuzzlePainter extends CustomPainter {
       whiteGloss,
     );
 
-    // Piece 2: Golden Amber piece (foreground interlocking piece)
     final p2 = Paint()
       ..shader = const LinearGradient(
         colors: [Color(0xFFFDE047), Color(0xFFF59E0B)],
@@ -245,18 +234,15 @@ class _CartoonPuzzlePainter extends CustomPainter {
     canvas.drawRRect(r2, p2);
     canvas.drawRRect(r2, inkBorder);
 
-    // Tab for piece 2 protruding top
     final tab2 = Path()
       ..addOval(Rect.fromCircle(center: Offset(w * 0.62, h * 0.36), radius: w * 0.13));
     canvas.drawPath(tab2, p2);
     canvas.drawPath(tab2, inkBorder);
 
-    // Cute smiling eyes on piece 2
     final eyePaint = Paint()..color = const Color(0xFF1E1035);
     canvas.drawCircle(Offset(w * 0.53, h * 0.60), 2.2, eyePaint);
     canvas.drawCircle(Offset(w * 0.71, h * 0.60), 2.2, eyePaint);
 
-    // Smiling mouth
     final mouthPaint = Paint()
       ..color = const Color(0xFF1E1035)
       ..style = PaintingStyle.stroke
@@ -267,7 +253,6 @@ class _CartoonPuzzlePainter extends CustomPainter {
       ..quadraticBezierTo(w * 0.62, h * 0.74, w * 0.67, h * 0.68);
     canvas.drawPath(mouth, mouthPaint);
 
-    // Gloss on piece 2
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(w * 0.44, h * 0.42, w * 0.24, h * 0.08),
@@ -276,7 +261,6 @@ class _CartoonPuzzlePainter extends CustomPainter {
       whiteGloss,
     );
 
-    // 4-point cartoon sparkle on top-right
     _drawSparkle(canvas, Offset(w * 0.88, h * 0.20), w * 0.11, const Color(0xFFFFFBEB));
   }
 
@@ -298,9 +282,6 @@ class _CartoonPuzzlePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// =========================================================================
-// 2. CARTOON MEMORY MATCH ILLUSTRATION (Two fanned comic playing cards)
-// =========================================================================
 class CartoonMemoryIllustration extends StatelessWidget {
   final double size;
   const CartoonMemoryIllustration({super.key, this.size = 46});
@@ -333,7 +314,6 @@ class _CartoonMemoryPainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: 0.85)
       ..style = PaintingStyle.fill;
 
-    // CARD 1 (Back card, tilted -14 degrees, Violet mystery card with "?")
     canvas.save();
     canvas.translate(w * 0.32, h * 0.48);
     canvas.rotate(-14 * math.pi / 180);
@@ -343,9 +323,8 @@ class _CartoonMemoryPainter extends CustomPainter {
       const Radius.circular(8),
     );
 
-    // Card 1 shadow
     canvas.drawRRect(card1Rect.shift(const Offset(0, 3)), Paint()..color = const Color(0xFF1E1B4B));
-    // Card 1 fill
+
     canvas.drawRRect(
       card1Rect,
       Paint()
@@ -357,7 +336,6 @@ class _CartoonMemoryPainter extends CustomPainter {
     );
     canvas.drawRRect(card1Rect, inkBorder);
 
-    // Draw yellow Question Mark "?" on Card 1
     final textPainter1 = TextPainter(
       text: const TextSpan(
         text: '?',
@@ -376,7 +354,6 @@ class _CartoonMemoryPainter extends CustomPainter {
 
     canvas.restore();
 
-    // CARD 2 (Front card, tilted +12 degrees, Cyan card with matching Star ⭐)
     canvas.save();
     canvas.translate(w * 0.62, h * 0.54);
     canvas.rotate(12 * math.pi / 180);
@@ -386,9 +363,8 @@ class _CartoonMemoryPainter extends CustomPainter {
       const Radius.circular(8),
     );
 
-    // Card 2 shadow
     canvas.drawRRect(card2Rect.shift(const Offset(0, 3)), Paint()..color = const Color(0xFF0369A1));
-    // Card 2 fill
+
     canvas.drawRRect(
       card2Rect,
       Paint()
@@ -400,7 +376,6 @@ class _CartoonMemoryPainter extends CustomPainter {
     );
     canvas.drawRRect(card2Rect, inkBorder);
 
-    // Draw Golden Star ⭐ icon on Card 2
     final textPainter2 = TextPainter(
       text: const TextSpan(
         text: '⭐',
@@ -410,7 +385,6 @@ class _CartoonMemoryPainter extends CustomPainter {
     )..layout();
     textPainter2.paint(canvas, Offset(-textPainter2.width / 2, -textPainter2.height / 2));
 
-    // Gloss strip on card 2
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(-w * 0.18, -h * 0.26, w * 0.36, h * 0.08),
@@ -421,7 +395,6 @@ class _CartoonMemoryPainter extends CustomPainter {
 
     canvas.restore();
 
-    // Floating comic lightning bolt ⚡ on top-right
     final zapPainter = TextPainter(
       text: const TextSpan(
         text: '⚡',
@@ -436,9 +409,6 @@ class _CartoonMemoryPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// =========================================================================
-// 3. CARTOON SLIDING PUZZLE ILLUSTRATION (Colorful 3D puzzle grid with slide arrow)
-// =========================================================================
 class CartoonSlidingIllustration extends StatelessWidget {
   final double size;
   const CartoonSlidingIllustration({super.key, this.size = 46});
@@ -471,22 +441,19 @@ class _CartoonSlidingPainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: 0.8)
       ..style = PaintingStyle.fill;
 
-    // Tray background
     final trayRect = RRect.fromRectAndRadius(
       Rect.fromLTWH(w * 0.06, h * 0.06, w * 0.88, h * 0.88),
       const Radius.circular(12),
     );
-    // Tray shadow
+
     canvas.drawRRect(trayRect.shift(const Offset(0, 3)), Paint()..color = const Color(0xFF0F0B1E));
     canvas.drawRRect(trayRect, Paint()..color = const Color(0xFF1E1B4B));
     canvas.drawRRect(trayRect, inkBorder);
 
-    // 4 tiles (3 filled, 1 empty slot with slide arrow)
     final double tw = w * 0.36;
     final double th = h * 0.36;
     final double pad = w * 0.10;
 
-    // Tile 1: Top-Left (Coral Pink "1")
     _drawTile(
       canvas: canvas,
       rect: Rect.fromLTWH(pad, pad, tw, th),
@@ -497,7 +464,6 @@ class _CartoonSlidingPainter extends CustomPainter {
       whiteGloss: whiteGloss,
     );
 
-    // Tile 2: Top-Right (Sunny Yellow "2")
     _drawTile(
       canvas: canvas,
       rect: Rect.fromLTWH(pad + tw + 4, pad, tw, th),
@@ -508,7 +474,6 @@ class _CartoonSlidingPainter extends CustomPainter {
       whiteGloss: whiteGloss,
     );
 
-    // Tile 3: Bottom-Left (Emerald Mint "3")
     _drawTile(
       canvas: canvas,
       rect: Rect.fromLTWH(pad, pad + th + 4, tw, th),
@@ -519,7 +484,6 @@ class _CartoonSlidingPainter extends CustomPainter {
       whiteGloss: whiteGloss,
     );
 
-    // Tile 4 (Bottom-Right): Empty slot with comic dashed cavity and curved slide arrow
     final emptySlot = RRect.fromRectAndRadius(
       Rect.fromLTWH(pad + tw + 4, pad + th + 4, tw, th),
       const Radius.circular(7),
@@ -532,7 +496,6 @@ class _CartoonSlidingPainter extends CustomPainter {
       ..strokeWidth = 1.8;
     canvas.drawRRect(emptySlot, dashPaint);
 
-    // Slide arrow inside empty slot
     final arrowPainter = TextPainter(
       text: const TextSpan(
         text: '➜',
@@ -560,9 +523,9 @@ class _CartoonSlidingPainter extends CustomPainter {
     required Paint whiteGloss,
   }) {
     final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(7));
-    // 3D bottom bevel
+
     canvas.drawRRect(rrect.shift(const Offset(0, 2)), Paint()..color = shadowColor);
-    // Face gradient
+
     canvas.drawRRect(
       rrect,
       Paint()
@@ -574,7 +537,6 @@ class _CartoonSlidingPainter extends CustomPainter {
     );
     canvas.drawRRect(rrect, inkBorder);
 
-    // Top gloss
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(rect.left + 3, rect.top + 2, rect.width - 6, 4),
@@ -583,7 +545,6 @@ class _CartoonSlidingPainter extends CustomPainter {
       whiteGloss,
     );
 
-    // Number text
     final tp = TextPainter(
       text: TextSpan(
         text: numberText,

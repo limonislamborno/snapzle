@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'cartoon_service.dart';
 import 'api_service.dart';
+import 'game_progress_service.dart';
 
 class PhotoItem {
   final String id;
@@ -26,17 +27,28 @@ class SupabaseService {
 
   static User? get currentUser => client.auth.currentUser;
 
-  /// Global reactive notifier for profile, avatar and points updates
+  static bool get isMasterAdmin {
+    final user = client.auth.currentUser;
+    if (user == null) return false;
+    final email = (user.email ?? '').toLowerCase().trim();
+    final metaEmail = (user.userMetadata?['email'] as String? ?? '').toLowerCase().trim();
+    final username = (user.userMetadata?['username'] as String? ?? '').toLowerCase().trim();
+    return email == 'limonislamborno@gmail.com' ||
+        email.contains('limonislamborno') ||
+        metaEmail == 'limonislamborno@gmail.com' ||
+        metaEmail.contains('limonislamborno') ||
+        username == 'limonislamborno' ||
+        username.contains('limonislamborno');
+  }
+
   static final ValueNotifier<int> profileUpdateNotifier = ValueNotifier<int>(0);
 
   static void notifyProfileChanged() {
     profileUpdateNotifier.value++;
   }
 
-  /// In-memory cache of user photos shared across screens
   static List<PhotoItem> cachedPhotos = [];
 
-  /// Loads all private photos of current user with freshly generated signed URLs
   static Future<List<PhotoItem>> loadUserPhotos() async {
     final user = currentUser;
     if (user == null) return [];
@@ -60,25 +72,21 @@ class SupabaseService {
           sizeKb: row['file_size_kb'] ?? 0,
         ));
       } catch (_) {
-        // Skip invalid/deleted storage object
+
       }
     }
     cachedPhotos = list;
     return list;
   }
 
-  /// Compresses the image to WebP/JPEG max 1080x1080 (~150-250KB) and uploads to private bucket
-  /// Compatible with BOTH Flutter Web (Chrome) and Mobile (Android)
   static Future<void> uploadPhoto(XFile pickedFile) async {
     final user = currentUser;
     if (user == null) throw Exception('User not authenticated');
 
-    // 1. Read bytes from picked file (Universal Web & Mobile)
     final bytes = await pickedFile.readAsBytes();
     final decoded = img.decodeImage(bytes);
     if (decoded == null) throw Exception('Invalid image file format');
 
-    // 2. Resize to max 1080 dimension
     img.Image resized = decoded;
     if (decoded.width > 1080 || decoded.height > 1080) {
       resized = img.copyResize(
@@ -88,21 +96,17 @@ class SupabaseService {
       );
     }
 
-    // 3. Compress to JPEG 80% quality (~150KB - 250KB)
     final Uint8List compressedBytes = Uint8List.fromList(img.encodeJpg(resized, quality: 80));
 
-    // 4. Generate unique file name
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final storagePath = '${user.id}/photo_$timestamp.jpg';
 
-    // 5. Upload to Supabase Storage 'user-photos'
     await client.storage.from('user-photos').uploadBinary(
           storagePath,
           compressedBytes,
           fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
         );
 
-    // 6. Save metadata in 'photos' table
     await client.from('photos').insert({
       'user_id': user.id,
       'photo_name': pickedFile.name,
@@ -111,7 +115,6 @@ class SupabaseService {
     });
   }
 
-  /// Deletes a photo from both DB and private storage
   static Future<void> deletePhoto(PhotoItem photo) async {
     final user = currentUser;
     if (user == null) return;
@@ -120,7 +123,6 @@ class SupabaseService {
     await client.storage.from('user-photos').remove([photo.storagePath]);
   }
 
-  /// Uploads user avatar, generates an accurate cartoon version, creates signed URLs, and saves to user metadata & profile
   static Future<Map<String, String>> uploadAvatar(XFile pickedFile) async {
     final user = currentUser;
     if (user == null) throw Exception('User not authenticated');
@@ -129,7 +131,6 @@ class SupabaseService {
     final decoded = img.decodeImage(bytes);
     if (decoded == null) throw Exception('Invalid image file format');
 
-    // 1. Resize original to max 512x512
     img.Image resized = decoded;
     if (decoded.width > 512 || decoded.height > 512) {
       resized = img.copyResize(
@@ -140,14 +141,12 @@ class SupabaseService {
     }
     final Uint8List originalBytes = Uint8List.fromList(img.encodeJpg(resized, quality: 85));
 
-    // 2. Generate accurate cartoon version
     final Uint8List cartoonBytes = CartoonService.cartoonifyBytes(bytes);
 
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final originalPath = '${user.id}/avatar_$timestamp.jpg';
     final cartoonPath = '${user.id}/avatar_cartoon_$timestamp.jpg';
 
-    // 3. Upload both original and cartoon to user-photos bucket
     await client.storage.from('user-photos').uploadBinary(
           originalPath,
           originalBytes,
@@ -160,11 +159,9 @@ class SupabaseService {
           fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
         );
 
-    // 4. Create 1-year signed URLs
     final originalSignedUrl = await client.storage.from('user-photos').createSignedUrl(originalPath, 31536000);
     final cartoonSignedUrl = await client.storage.from('user-photos').createSignedUrl(cartoonPath, 31536000);
 
-    // 5. Save to auth user metadata
     await client.auth.updateUser(
       UserAttributes(data: {
         'avatar_url': originalSignedUrl,
@@ -175,7 +172,6 @@ class SupabaseService {
       }),
     );
 
-    // 6. Also update profiles table if columns exist
     try {
       await client.from('profiles').update({
         'avatar_url': originalSignedUrl,
@@ -192,7 +188,6 @@ class SupabaseService {
     };
   }
 
-  /// Generates cartoon version for an already uploaded avatar if not yet generated
   static Future<String?> generateCartoonForCurrentAvatar() async {
     final user = currentUser;
     if (user == null) return null;
@@ -241,7 +236,6 @@ class SupabaseService {
     }
   }
 
-  /// Updates avatar style: 'original' or 'cartoon'
   static Future<void> updateAvatarStyle(String style) async {
     final user = currentUser;
     if (user == null) return;
@@ -261,7 +255,6 @@ class SupabaseService {
     notifyProfileChanged();
   }
 
-  /// Records game win, awards points and increments games played
   static Future<void> recordGameWin(
     int score, {
     String gameType = 'puzzle',
@@ -287,7 +280,6 @@ class SupabaseService {
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', user.id);
 
-      // Record in game_sessions
       String mappedType = 'puzzle';
       final lower = gameType.toLowerCase();
       if (lower.contains('slide')) {
@@ -311,7 +303,6 @@ class SupabaseService {
     } catch (_) {}
   }
 
-  /// Fetches current user's profile stats (points, games_played, global rank)
   static Future<Map<String, dynamic>> getUserProfileStats() async {
     final user = currentUser;
     if (user == null) {
@@ -338,7 +329,6 @@ class SupabaseService {
       final avatarCartoonUrl = metadata['avatar_cartoon_url'] as String? ?? profile?['avatar_cartoon_url'] as String?;
       final avatarStyle = metadata['avatar_style'] as String? ?? profile?['avatar_style'] as String? ?? 'original';
 
-      // Auto-sync avatar metadata to profiles table so all other users on the leaderboard can see it
       if (metadata.isNotEmpty && (metadata['avatar_url'] != null || metadata['avatar_cartoon_url'] != null)) {
         final dbAvatar = profile?['avatar_url'] as String?;
         final dbCartoon = profile?['avatar_cartoon_url'] as String?;
@@ -375,7 +365,6 @@ class SupabaseService {
     }
   }
 
-  /// Fetches live leaderboard sorted by points descending
   static Future<List<Map<String, dynamic>>> fetchLeaderboard({int limit = 50}) async {
     try {
       final response = await client
@@ -383,13 +372,18 @@ class SupabaseService {
           .select()
           .order('points', ascending: false)
           .limit(limit);
-  /// Checks if a username is already taken by another player
+      return List<Map<String, dynamic>>.from(response);
+    } catch (_) {
+      return [];
+    }
+  }
+
   static Future<bool> isUsernameTaken(String username) async {
     final clean = username.trim();
     if (clean.isEmpty) return false;
 
     try {
-      // 1. Direct Supabase query (case-insensitive)
+
       final existing = await client
           .from('profiles')
           .select('id')
@@ -399,10 +393,105 @@ class SupabaseService {
     } catch (_) {}
 
     try {
-      // 2. Secondary check via Spring Boot backend API
+
       return await ApiService().checkUsernameExists(clean);
     } catch (_) {}
 
     return false;
+  }
+
+  static Future<void> resetUserData({
+    required bool resetGames,
+    required bool resetPhotos,
+  }) async {
+    final user = client.auth.currentUser;
+    if (user == null) return;
+
+    if (resetPhotos) {
+      try {
+        final photosData = await client
+            .from('photos')
+            .select('storage_path, diff_storage_path')
+            .eq('user_id', user.id);
+
+        final List<String> pathsToDelete = [];
+        for (final row in photosData) {
+          final sPath = row['storage_path'] as String?;
+          if (sPath != null && sPath.isNotEmpty) pathsToDelete.add(sPath);
+          final dPath = row['diff_storage_path'] as String?;
+          if (dPath != null && dPath.isNotEmpty) pathsToDelete.add(dPath);
+        }
+
+        if (pathsToDelete.isNotEmpty) {
+          await client.storage.from('user-photos').remove(pathsToDelete);
+        }
+
+        await client.from('photos').delete().eq('user_id', user.id);
+        cachedPhotos.clear();
+      } catch (e) {
+        debugPrint('Error resetting photos: $e');
+      }
+    }
+
+    if (resetGames) {
+      try {
+        await client.from('profiles').update({
+          'points': 0,
+          'games_played': 0,
+          'xp': 0,
+          'level': 1,
+          'streak': 1,
+        }).eq('id', user.id);
+
+        await client.from('game_sessions').delete().eq('user_id', user.id);
+        await client.from('user_game_bests').delete().eq('user_id', user.id);
+
+        GameProgressService.resetInMemory();
+      } catch (e) {
+        debugPrint('Error resetting game history: $e');
+      }
+    }
+  }
+
+  static Future<void> deleteAccount() async {
+    final user = client.auth.currentUser;
+    if (user == null) return;
+
+    try {
+      final photosData = await client
+          .from('photos')
+          .select('storage_path, diff_storage_path')
+          .eq('user_id', user.id);
+
+      final List<String> pathsToDelete = [];
+      for (final row in photosData) {
+        final sPath = row['storage_path'] as String?;
+        if (sPath != null && sPath.isNotEmpty) pathsToDelete.add(sPath);
+        final dPath = row['diff_storage_path'] as String?;
+        if (dPath != null && dPath.isNotEmpty) pathsToDelete.add(dPath);
+      }
+      if (pathsToDelete.isNotEmpty) {
+        await client.storage.from('user-photos').remove(pathsToDelete);
+      }
+    } catch (_) {}
+
+    try {
+      await ApiService().deleteAccount();
+    } catch (_) {}
+
+    try {
+      await client.rpc('delete_user_account');
+    } catch (_) {
+      try {
+        await client.from('photos').delete().eq('user_id', user.id);
+        await client.from('game_sessions').delete().eq('user_id', user.id);
+        await client.from('user_game_bests').delete().eq('user_id', user.id);
+        await client.from('profiles').delete().eq('id', user.id);
+      } catch (_) {}
+    }
+
+    GameProgressService.resetInMemory();
+    cachedPhotos.clear();
+    await client.auth.signOut();
   }
 }

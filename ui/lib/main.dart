@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -8,18 +9,19 @@ import 'widgets/glass_card.dart';
 import 'widgets/gaming_button.dart';
 import 'widgets/avatar_view.dart';
 import 'widgets/cartoon_game_icons.dart';
+import 'widgets/quit_game_dialog.dart';
 import 'screens/auth_screen.dart';
+import 'screens/admin_console_screen.dart';
 import 'services/supabase_service.dart';
 import 'services/game_progress_service.dart';
 import 'games/photo_puzzle_screen.dart';
 import 'games/memory_match_screen.dart';
-// import 'games/find_difference_screen.dart';
+
 import 'games/sliding_puzzle_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Supabase init
   await Supabase.initialize(
     url: 'https://bjwttdvyajsbfnbcspkc.supabase.co',
     anonKey: 'sb_publishable_K3euv4gSPoCOj6-FYqnJug_8-_B_jC3',
@@ -44,9 +46,6 @@ class SnapzleApp extends StatelessWidget {
   }
 }
 
-/// Listens to Supabase Auth State:
-/// - If not logged in -> Shows AuthScreen (Welcome / Sign In / Create Account / OTP)
-/// - If logged in -> Shows MainShellScreen (Game Hub)
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -71,20 +70,93 @@ class AuthGate extends StatelessWidget {
 class MainShellScreen extends StatefulWidget {
   const MainShellScreen({super.key});
 
+  static final ValueNotifier<int> tabChangeNotifier = ValueNotifier<int>(0);
+
+  static void switchTab(int index) {
+    tabChangeNotifier.value = index;
+  }
+
   @override
   State<MainShellScreen> createState() => _MainShellScreenState();
 }
 
 class _MainShellScreenState extends State<MainShellScreen> {
   int _currentIndex = 0;
+  int _lastRootIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    MainShellScreen.tabChangeNotifier.addListener(_onTabRequested);
+    SupabaseService.profileUpdateNotifier.addListener(_onProfileUpdated);
+    _checkAccountActive();
+  }
+
+  @override
+  void dispose() {
+    MainShellScreen.tabChangeNotifier.removeListener(_onTabRequested);
+    SupabaseService.profileUpdateNotifier.removeListener(_onProfileUpdated);
+    super.dispose();
+  }
+
+  Future<void> _checkAccountActive() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+    try {
+      final profile = await Supabase.instance.client
+          .from('profiles')
+          .select('is_active')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (profile != null && profile['is_active'] == false) {
+        AuthScreen.pendingSuspendedNotice = true;
+        await Supabase.instance.client.auth.signOut();
+      }
+    } catch (_) {}
+  }
+
+  void _onProfileUpdated() {
+    _checkAccountActive();
+    if (mounted) setState(() {});
+  }
+
+  void _onTabRequested() {
+    if (mounted) {
+      setState(() {
+        final target = MainShellScreen.tabChangeNotifier.value;
+        if (_currentIndex < 5) {
+          _lastRootIndex = _currentIndex;
+        }
+        _currentIndex = target;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        if (_currentIndex == 5) {
+          setState(() => _currentIndex = _lastRootIndex);
+          return;
+        }
+        if (_currentIndex != 0) {
+          setState(() => _currentIndex = 0);
+          return;
+        }
+        final shouldExit = await showExitAppConfirmation(context);
+        if (shouldExit && context.mounted) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: Stack(
         children: [
-          // Ambient Warm Orange Bubbles Background
+
           Positioned(
             top: -50,
             right: -30,
@@ -156,16 +228,21 @@ class _MainShellScreenState extends State<MainShellScreen> {
             ),
           ),
 
-          // Main Screen Switcher
           SafeArea(
             child: IndexedStack(
               index: _currentIndex,
-              children: const [
-                HomeScreen(),
-                GamesHubScreen(),
-                LeaderboardScreen(),
-                PhotoLibraryScreen(),
-                ProfileScreen(),
+              children: [
+                const HomeScreen(),
+                const GamesHubScreen(),
+                const LeaderboardScreen(),
+                const PhotoLibraryScreen(),
+                const ProfileScreen(),
+                AdminConsoleScreen(
+                  isEmbedded: true,
+                  onExitToShell: () {
+                    if (mounted) setState(() => _currentIndex = _lastRootIndex);
+                  },
+                ),
               ],
             ),
           ),
@@ -177,8 +254,9 @@ class _MainShellScreenState extends State<MainShellScreen> {
           border: Border(top: BorderSide(color: AppColors.glassBorder)),
         ),
         child: BottomNavigationBar(
-          currentIndex: _currentIndex,
+          currentIndex: _currentIndex >= 5 ? _lastRootIndex : _currentIndex,
           onTap: (idx) {
+            _lastRootIndex = idx;
             if (idx == 0 || idx == 2) {
               SupabaseService.notifyProfileChanged();
             } else if (idx == 1 || idx == 3) {
@@ -190,7 +268,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
           },
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.transparent,
-          selectedItemColor: AppColors.primaryOrange,
+          selectedItemColor: _currentIndex >= 5 ? AppColors.textMuted : AppColors.primaryOrange,
           unselectedItemColor: AppColors.textMuted,
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
           unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
@@ -204,13 +282,11 @@ class _MainShellScreenState extends State<MainShellScreen> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }
 
-// ==========================================
-// 1. HOME SCREEN
-// ==========================================
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -271,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Prominent Hero Player Card (Large Avatar, Points & Rank)
+
             GlassCard(
               isStrong: true,
               glowColor: AppColors.primary,
@@ -280,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Row(
                     children: [
-                      // Large Prominent Avatar (Original or Cartoon)
+
                       AvatarView(
                         photoUrl: _avatarUrl,
                         cartoonPhotoUrl: _avatarCartoonUrl,
@@ -357,9 +433,55 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
+
+            if (SupabaseService.isMasterAdmin) ...[
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () {
+                  MainShellScreen.switchTab(5);
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: AppColors.brandGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryOrange.withValues(alpha: 0.35),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(LucideIcons.shieldCheck, color: Colors.white, size: 26),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '👑 Master Admin Console',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            Text(
+                              'Tap to inspect all players & view all uploaded user photos',
+                              style: TextStyle(color: Colors.white70, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(LucideIcons.chevronRight, color: Colors.white, size: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+
             const SizedBox(height: 20),
 
-            // 2. Game Points & Scoring Breakdown
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -409,16 +531,7 @@ class _HomeScreenState extends State<HomeScreen> {
               rule: '200 pts/pair + Speed Bonus (up to 500)',
               tip: 'Tier scoring: 6 pairs (~1.7K), 8 pairs (~2.1K), 10 pairs (~2.5K).',
             ),
-            /*
-            _scoringGuideCard(
-              title: 'Find the Difference',
-              icon: LucideIcons.scanSearch,
-              color: AppColors.accentPink,
-              maxPts: 'Up to 1,000 pts',
-              rule: 'Base 1000 - (5 × Seconds)',
-              tip: 'Spot all 5 differences quickly with zero wrong taps.',
-            ),
-            */
+
           ],
         ),
       ),
@@ -506,9 +619,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ==========================================
-// 2. GAMES HUB SCREEN (Plays with User Photos)
-// ==========================================
 class GamesHubScreen extends StatefulWidget {
   const GamesHubScreen({super.key});
 
@@ -571,7 +681,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                     style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
                   ),
                   const SizedBox(height: 16),
-                  // Photo selector carousel
+
                   SizedBox(
                     height: 100,
                     child: ListView.builder(
@@ -1199,49 +1309,7 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
             difficultyMeta: '6 to 10 Pairs',
             onTap: () => _openMemoryMatchSetup(context),
           ),
-          /*
-          _gameLaunchCard(
-            context: context,
-            title: 'Find the Difference',
-            subtitle: 'Spot the 5 procedural hidden changes',
-            tag: 'OBSERVE',
-            cartoonIcon: const CartoonGameBadge(
-              iconWidget: Icon(LucideIcons.scanSearch, color: Colors.white, size: 28),
-              bgGradient: [Color(0xFFF43F5E), Color(0xFFFB923C)],
-              glowColor: Color(0xFFF43F5E),
-              tagEmoji: '🔍',
-            ),
-            glowColor: const Color(0xFFF43F5E),
-            actionGradient: const [Color(0xFFF43F5E), Color(0xFFFB923C)],
-            difficultyMeta: '5 Hidden Spots',
-            onTap: () async {
-              if (_photos.isEmpty) {
-                await _loadPhotos();
-              }
-              if (_photos.isEmpty) {
-                if (mounted) _showUploadRequiredDialog('Find the Difference');
-                return;
-              }
-              if (!context.mounted) return;
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => FindDifferenceScreen(
-                    spots: [
-                      SpotDifference(id: 1, xPct: 28, yPct: 22),
-                      SpotDifference(id: 2, xPct: 74, yPct: 35),
-                      SpotDifference(id: 3, xPct: 38, yPct: 70),
-                      SpotDifference(id: 4, xPct: 82, yPct: 60),
-                      SpotDifference(id: 5, xPct: 15, yPct: 50),
-                    ],
-                    originalImage: Image.network(_photos.first.signedUrl, fit: BoxFit.contain),
-                    modifiedImage: Image.network(_photos.first.signedUrl, fit: BoxFit.contain),
-                  ),
-                ),
-              );
-            },
-          ),
-          */
+
           _gameLaunchCard(
             context: context,
             title: 'Sliding Puzzle',
@@ -1379,9 +1447,6 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
   }
 }
 
-// ==========================================
-// 3. LEADERBOARD SCREEN (Accurate Live Rankings)
-// ==========================================
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
 
@@ -1466,10 +1531,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
-                    // Dynamic Podium for Top 3
+
                     _buildPodium(),
                     const SizedBox(height: 24),
-                    // List from #4 onwards (or remaining)
+
                     ...List.generate(
                       _leaderboard.length > 3 ? _leaderboard.length - 3 : 0,
                       (i) {
@@ -1559,52 +1624,107 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     final top2 = _leaderboard.length > 1 ? _leaderboard[1] : null;
     final top3 = _leaderboard.length > 2 ? _leaderboard[2] : null;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        // Rank 2 (Left)
-        if (top2 != null)
-          _podiumPillar(
-            rank: '#2',
-            player: top2,
-            height: 90,
-            color: AppColors.primaryBlue,
-            currentUserId: currentUserId,
-            badgeIcon: LucideIcons.medal,
-            avatarSize: 50,
-          )
-        else
-          const SizedBox(width: 82),
+    return Container(
+      padding: const EdgeInsets.only(top: 28, bottom: 4, left: 6, right: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppColors.glassBorder, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryOrange.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
 
-        // Rank 1 (Center)
-        if (top1 != null)
-          _podiumPillar(
-            rank: '#1',
-            player: top1,
-            height: 120,
-            color: AppColors.accentAmber,
-            currentUserId: currentUserId,
-            badgeIcon: LucideIcons.crown,
-            avatarSize: 62,
-          )
-        else
-          const SizedBox(width: 82),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
 
-        // Rank 3 (Right)
-        if (top3 != null)
-          _podiumPillar(
-            rank: '#3',
-            player: top3,
-            height: 72,
-            color: AppColors.accentEmerald,
-            currentUserId: currentUserId,
-            badgeIcon: LucideIcons.award,
-            avatarSize: 46,
-          )
-        else
-          const SizedBox(width: 82),
-      ],
+              if (top2 != null)
+                _podiumPillar(
+                  rank: '#2',
+                  player: top2,
+                  height: 105,
+                  width: 96,
+                  color: AppColors.primaryBlue,
+                  glowColor: const Color(0xFF38BDF8),
+                  ringColors: const [Color(0xFFE2E8F0), Color(0xFF94A3B8), Color(0xFF38BDF8)],
+                  currentUserId: currentUserId,
+                  badgeIcon: LucideIcons.medal,
+                  avatarSize: 70,
+                  numeralWatermark: '2',
+                  tierLabel: 'RUNNER UP',
+                  scoreIcon: LucideIcons.flame,
+                  isChampion: false,
+                )
+              else
+                const SizedBox(width: 96),
+
+              if (top1 != null)
+                _podiumPillar(
+                  rank: '#1',
+                  player: top1,
+                  height: 140,
+                  width: 116,
+                  color: AppColors.accentAmber,
+                  glowColor: const Color(0xFFF59E0B),
+                  ringColors: const [Color(0xFFFFE082), Color(0xFFF59E0B), Color(0xFFD97706)],
+                  currentUserId: currentUserId,
+                  badgeIcon: LucideIcons.crown,
+                  avatarSize: 90,
+                  numeralWatermark: '1',
+                  tierLabel: 'CHAMPION',
+                  scoreIcon: LucideIcons.sparkles,
+                  isChampion: true,
+                )
+              else
+                const SizedBox(width: 116),
+
+              if (top3 != null)
+                _podiumPillar(
+                  rank: '#3',
+                  player: top3,
+                  height: 82,
+                  width: 96,
+                  color: AppColors.accentEmerald,
+                  glowColor: const Color(0xFFEA580C),
+                  ringColors: const [Color(0xFFFFEDD5), Color(0xFFFB923C), Color(0xFFC2410C)],
+                  currentUserId: currentUserId,
+                  badgeIcon: LucideIcons.award,
+                  avatarSize: 66,
+                  numeralWatermark: '3',
+                  tierLabel: '3RD PLACE',
+                  scoreIcon: LucideIcons.trophy,
+                  isChampion: false,
+                )
+              else
+                const SizedBox(width: 96),
+            ],
+          ),
+
+          Container(
+            height: 10,
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primaryOrange.withValues(alpha: 0.15),
+                  const Color(0xFFF59E0B).withValues(alpha: 0.65),
+                  AppColors.primaryOrange.withValues(alpha: 0.15),
+                ],
+              ),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+            ),
+          ),
+          const SizedBox(height: 6),
+        ],
+      ),
     );
   }
 
@@ -1632,10 +1752,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     required String rank,
     required Map<String, dynamic> player,
     required double height,
+    required double width,
     required Color color,
+    required Color glowColor,
+    required List<Color> ringColors,
     required String? currentUserId,
     required IconData badgeIcon,
     required double avatarSize,
+    required String numeralWatermark,
+    required String tierLabel,
+    required IconData scoreIcon,
+    required bool isChampion,
   }) {
     final avatarData = _resolvePlayerAvatar(player, currentUserId);
     final name = player['username'] ?? 'Player';
@@ -1643,23 +1770,136 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     final isMe = player['id'] == currentUserId;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6.0),
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
       child: Column(
         children: [
-          Icon(badgeIcon, color: color, size: rank == '#1' ? 22 : 18),
-          const SizedBox(height: 4),
-          AvatarView(
-            photoUrl: avatarData['avatarUrl'],
-            cartoonPhotoUrl: avatarData['cartoonUrl'],
-            avatarStyle: avatarData['avatarStyle'],
-            emoji: avatarData['emoji'],
-            gradientIndex: avatarData['gradientIndex'],
-            size: avatarSize,
-            hasRing: true,
+
+          Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+
+              Container(
+                width: avatarSize + 10,
+                height: avatarSize + 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: glowColor.withValues(alpha: isChampion ? 0.22 : 0.14),
+                ),
+              ),
+
+              Container(
+                padding: EdgeInsets.all(isChampion ? 4.0 : 3.0),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: ringColors,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    width: isChampion ? 2.2 : 1.6,
+                  ),
+                ),
+                child: AvatarView(
+                  photoUrl: avatarData['avatarUrl'],
+                  cartoonPhotoUrl: avatarData['cartoonUrl'],
+                  avatarStyle: avatarData['avatarStyle'],
+                  emoji: avatarData['emoji'],
+                  gradientIndex: avatarData['gradientIndex'],
+                  size: avatarSize,
+                  hasRing: false,
+                ),
+              ),
+
+              Positioned(
+                top: isChampion ? -22 : -16,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isChampion ? 8 : 6,
+                    vertical: isChampion ? 4 : 3,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isChampion
+                          ? [const Color(0xFFFFFBEB), const Color(0xFFFDE68A)]
+                          : [Colors.white, const Color(0xFFF1F5F9)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: glowColor.withValues(alpha: 0.8),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: glowColor.withValues(alpha: 0.45),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        badgeIcon,
+                        color: glowColor,
+                        size: isChampion ? 18 : 13,
+                      ),
+                      if (isChampion) ...[
+                        const SizedBox(width: 3),
+                        const Text(
+                          'MVP',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFB45309),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+
+              Positioned(
+                bottom: -8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [glowColor, glowColor.withValues(alpha: 0.85)],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white, width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    rank,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
+
+          const SizedBox(height: 14),
+
           SizedBox(
-            width: 82,
+            width: width,
             child: Text(
               name,
               maxLines: 1,
@@ -1667,31 +1907,105 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight: isMe ? FontWeight.w900 : FontWeight.bold,
-                fontSize: 12,
+                fontSize: isChampion ? 13 : 12,
                 color: isMe ? AppColors.primaryOrange : AppColors.textPrimary,
               ),
             ),
           ),
-          const SizedBox(height: 2),
-          Text(pts, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
+
           Container(
-            width: 82,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: glowColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: glowColor.withValues(alpha: 0.35), width: 1),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(scoreIcon, size: 10, color: glowColor),
+                const SizedBox(width: 4),
+                Text(
+                  pts,
+                  style: TextStyle(
+                    color: glowColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          Container(
+            width: width,
             height: height,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [color.withValues(alpha: 0.5), color.withValues(alpha: 0.1)],
+                colors: [
+                  glowColor.withValues(alpha: isChampion ? 0.45 : 0.35),
+                  glowColor.withValues(alpha: 0.10),
+                ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              border: Border.all(color: color.withValues(alpha: 0.5)),
-            ),
-            child: Center(
-              child: Text(
-                rank,
-                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              border: Border(
+                top: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  width: 2.5,
+                ),
+                left: BorderSide(
+                  color: glowColor.withValues(alpha: 0.5),
+                  width: 1.5,
+                ),
+                right: BorderSide(
+                  color: glowColor.withValues(alpha: 0.5),
+                  width: 1.5,
+                ),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: glowColor.withValues(alpha: 0.18),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+
+                Container(
+                  width: width * 0.45,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 6),
+
+                Text(
+                  numeralWatermark,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: isChampion ? 38 : 30,
+                    color: glowColor.withValues(alpha: 0.85),
+                  ),
+                ),
+                Text(
+                  tierLabel,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.8,
+                    color: glowColor.withValues(alpha: 0.9),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1700,9 +2014,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 }
 
-// ==========================================
-// 4. PHOTO LIBRARY SCREEN (Universal Web & Mobile)
-// ==========================================
 class PhotoLibraryScreen extends StatefulWidget {
   const PhotoLibraryScreen({super.key});
 
@@ -1890,7 +2201,7 @@ class _PhotoLibraryScreenState extends State<PhotoLibraryScreen> {
                                     if (progress == null) return child;
                                     return const Center(child: CircularProgressIndicator(strokeWidth: 2));
                                   },
-                                  errorBuilder: (_, __, ___) => const Center(
+                                  errorBuilder: (_, _, _) => const Center(
                                     child: Icon(LucideIcons.imageOff, color: Colors.white38),
                                   ),
                                 ),
@@ -1943,9 +2254,6 @@ class _PhotoLibraryScreenState extends State<PhotoLibraryScreen> {
   }
 }
 
-// ==========================================
-// 5. PROFILE SCREEN
-// ==========================================
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -2030,7 +2338,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _selectAvatarStyle(String newStyle) async {
     if (_avatarStyle == newStyle) return;
 
-    // If switching to cartoon and cartoon is not generated yet, generate now
     if (newStyle == 'cartoon' && (_avatarCartoonUrl == null || _avatarCartoonUrl!.isEmpty)) {
       setState(() => _isGeneratingCartoon = true);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -2138,7 +2445,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 12),
                 if (_avatarUrl != null) ...[
-                  // Avatar Style Switcher (Original vs Cartoon)
+
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
@@ -2179,7 +2486,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          // Live Stats Card
+
           GlassCard(
             child: Column(
               children: [
@@ -2196,9 +2503,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 20),
+
+          if (SupabaseService.isMasterAdmin) ...[
+            GamingButton(
+              label: '👑 Admin Console',
+              icon: LucideIcons.shieldCheck,
+              color: AppColors.primary,
+              textColor: Colors.white,
+              onPressed: () {
+                MainShellScreen.switchTab(5);
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          GamingButton(
+            label: 'Reset Game & Photo Data',
+            icon: LucideIcons.rotateCcw,
+            color: AppColors.surfaceMuted,
+            textColor: AppColors.primaryOrange,
+            border: Border.all(color: AppColors.glassBorder, width: 1.2),
+            onPressed: _showResetAccountDialog,
+          ),
+          const SizedBox(height: 12),
+
           GamingButton(
             label: 'Sign Out',
-            color: Colors.redAccent.withValues(alpha: 0.8),
+            color: AppColors.surfaceMuted,
+            textColor: AppColors.textPrimary,
+            border: Border.all(color: AppColors.glassBorder, width: 1.2),
             icon: LucideIcons.logOut,
             onPressed: () async {
               GameProgressService.resetInMemory();
@@ -2206,9 +2539,247 @@ class _ProfileScreenState extends State<ProfileScreen> {
               await Supabase.instance.client.auth.signOut();
             },
           ),
+          const SizedBox(height: 12),
+
+          GamingButton(
+            label: 'Delete Account Permanently',
+            icon: LucideIcons.trash2,
+            color: Colors.redAccent.withValues(alpha: 0.1),
+            textColor: Colors.redAccent,
+            border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5), width: 1.2),
+            onPressed: _showDeleteAccountDialog,
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _showResetAccountDialog() async {
+    bool resetGames = true;
+    bool resetPhotos = false;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: AppColors.backgroundSecondary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: const BorderSide(color: AppColors.glassBorder),
+              ),
+              title: const Row(
+                children: [
+                  Icon(LucideIcons.rotateCcw, color: AppColors.primaryOrange, size: 24),
+                  SizedBox(width: 10),
+                  Text(
+                    'Reset Data',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.textPrimary),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Choose what you want to reset from your account. You can select either one or both:',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.35),
+                    ),
+                    const SizedBox(height: 16),
+
+                    Container(
+                      decoration: BoxDecoration(
+                        color: resetGames ? AppColors.primaryOrange.withValues(alpha: 0.08) : AppColors.surfaceMuted,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: resetGames ? AppColors.primaryOrange : AppColors.glassBorder,
+                          width: 1.2,
+                        ),
+                      ),
+                      child: CheckboxListTile(
+                        value: resetGames,
+                        activeColor: AppColors.primaryOrange,
+                        checkboxShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                        title: const Text(
+                          'Game History & Points',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
+                        ),
+                        subtitle: const Text(
+                          'Resets score to 0 pts, level to 1, and clears games played.',
+                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        ),
+                        onChanged: (val) => setDialogState(() => resetGames = val ?? false),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    Container(
+                      decoration: BoxDecoration(
+                        color: resetPhotos ? Colors.redAccent.withValues(alpha: 0.08) : AppColors.surfaceMuted,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: resetPhotos ? Colors.redAccent : AppColors.glassBorder,
+                          width: 1.2,
+                        ),
+                      ),
+                      child: CheckboxListTile(
+                        value: resetPhotos,
+                        activeColor: Colors.redAccent,
+                        checkboxShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                        title: const Text(
+                          'Uploaded Photos Vault',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
+                        ),
+                        subtitle: const Text(
+                          'Permanently deletes all private uploaded photos from storage.',
+                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        ),
+                        onChanged: (val) => setDialogState(() => resetPhotos = val ?? false),
+                      ),
+                    ),
+
+                    if (!resetGames && !resetPhotos) ...[
+                      const SizedBox(height: 12),
+                      const Text(
+                        '⚠️ Please select at least one option to reset.',
+                        style: TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: (resetGames || resetPhotos) ? AppColors.primaryOrange : Colors.grey,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    elevation: 0,
+                  ),
+                  onPressed: (resetGames || resetPhotos) ? () => Navigator.pop(ctx, true) : null,
+                  child: const Text('Confirm Reset', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (confirmed == true && (resetGames || resetPhotos)) {
+      setState(() => _isLoading = true);
+      try {
+        await SupabaseService.resetUserData(resetGames: resetGames, resetPhotos: resetPhotos);
+        await _loadProfile();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              backgroundColor: AppColors.accentEmerald,
+              content: Text('Selected data successfully reset!'),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: Colors.redAccent,
+              content: Text('Reset failed: $e'),
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _showDeleteAccountDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.backgroundSecondary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Colors.redAccent, width: 1.2),
+        ),
+        title: const Row(
+          children: [
+            Icon(LucideIcons.triangleAlert, color: Colors.redAccent, size: 26),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Delete Account?',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.redAccent),
+              ),
+            ),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'This action is PERMANENT and CANNOT be undone.',
+              style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary, fontSize: 14),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Your entire profile, points, ranks, all private photos, and credentials will be deleted forever. You will be logged out automatically.',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              elevation: 0,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete Permanently', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() => _isLoading = true);
+      try {
+        await SupabaseService.deleteAccount();
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: Colors.redAccent,
+              content: Text('Failed to delete account: $e'),
+            ),
+          );
+        }
+      }
+    }
   }
 
   Widget _styleToggleChip({

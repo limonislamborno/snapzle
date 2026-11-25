@@ -39,7 +39,6 @@ class _GameResultDialogState extends State<GameResultDialog> {
     _confettiController = ConfettiController(duration: const Duration(seconds: 3));
     _confettiController.play();
 
-    // Award game points & update points in Supabase
     SupabaseService.recordGameWin(
       widget.score,
       gameType: widget.gameTitle,
@@ -158,7 +157,7 @@ class _GameResultDialogState extends State<GameResultDialog> {
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    Navigator.pop(context); // back to menu
+                    Navigator.pop(context);
                   },
                   child: Text(
                     'Back to Games',

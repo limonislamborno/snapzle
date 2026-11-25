@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/gaming_button.dart';
 import '../widgets/glass_card.dart';
+import '../widgets/quit_game_dialog.dart';
 
 enum AuthMode { welcome, login, register, verifyOtp, forgotPassword, resetPassword }
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
+
+  static bool pendingSuspendedNotice = false;
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -27,6 +31,23 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _otpController = TextEditingController();
 
   final SupabaseClient _supabase = Supabase.instance.client;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPendingSuspendedNotice();
+  }
+
+  void _checkPendingSuspendedNotice() {
+    if (AuthScreen.pendingSuspendedNotice) {
+      AuthScreen.pendingSuspendedNotice = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showAccountSuspendedDialog();
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -53,8 +74,53 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     try {
-      await _supabase.auth.signInWithPassword(email: email, password: password);
+
+      try {
+        final preCheck = await _supabase
+            .from('profiles')
+            .select('is_active')
+            .eq('email', email)
+            .maybeSingle();
+
+        if (preCheck != null && preCheck['is_active'] == false) {
+          setState(() => _isLoading = false);
+          await _showAccountSuspendedDialog();
+          return;
+        }
+      } catch (_) {}
+
+      final res = await _supabase.auth.signInWithPassword(email: email, password: password);
+      final userId = res.user?.id;
+      if (userId != null) {
+        final profile = await _supabase
+            .from('profiles')
+            .select('is_active')
+            .eq('id', userId)
+            .maybeSingle();
+
+        if (profile != null && profile['is_active'] == false) {
+          AuthScreen.pendingSuspendedNotice = true;
+          await _supabase.auth.signOut();
+          return;
+        }
+      }
     } on AuthException catch (e) {
+      final msg = e.message.toLowerCase();
+      if (msg.contains('email not confirmed')) {
+        setState(() {
+          _errorMessage = null;
+          _mode = AuthMode.verifyOtp;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please verify your email. Enter the 6-digit OTP code.'),
+              backgroundColor: AppColors.primaryOrange,
+            ),
+          );
+        }
+        return;
+      }
       setState(() => _errorMessage = e.message);
     } catch (e) {
       setState(() => _errorMessage = 'Login failed: ${e.toString()}');
@@ -63,9 +129,92 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  Future<void> _showAccountSuspendedDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.backgroundSecondary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: AppColors.glassBorder, width: 1.2),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(LucideIcons.shieldAlert, color: Colors.redAccent, size: 24),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'Account Inactive',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Your account has been deactivated.',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceMuted,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.glassBorder),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'To activate your account, please contact admin:',
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                  SizedBox(height: 6),
+                  SelectableText(
+                    'limonislamborno@gmail.com',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryOrange,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryOrange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('OK', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleRegister() async {
     final username = _usernameController.text.trim();
-    final email = _emailController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
     final password = _passwordController.text.trim();
 
     if (username.isEmpty || email.isEmpty || password.isEmpty) {
@@ -89,7 +238,7 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     try {
-      // 1. Check if username is already taken
+
       final usernameTaken = await SupabaseService.isUsernameTaken(username);
       if (usernameTaken) {
         if (!mounted) return;
@@ -98,15 +247,12 @@ class _AuthScreenState extends State<AuthScreen> {
         return;
       }
 
-      // 2. Perform Supabase Sign Up
       final res = await _supabase.auth.signUp(
         email: email,
         password: password,
         data: {'username': username},
       );
 
-      // 3. Supabase anti-enumeration detection:
-      // When email confirmation is active and an email already exists, identities is returned empty
       if (res.user != null && res.user!.identities != null && res.user!.identities!.isEmpty) {
         if (!mounted) return;
         setState(() => _isLoading = false);
@@ -115,7 +261,7 @@ class _AuthScreenState extends State<AuthScreen> {
       }
 
       if (res.session == null) {
-        // Confirmation email with OTP required
+        _otpController.clear();
         setState(() => _mode = AuthMode.verifyOtp);
       }
     } on AuthException catch (e) {
@@ -336,11 +482,16 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _handleVerifyOtp() async {
-    final email = _emailController.text.trim();
-    final token = _otpController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
+    final cleanToken = _otpController.text.replaceAll(RegExp(r'\D'), '').trim();
 
-    if (token.length < 6 || token.length > 8) {
-      setState(() => _errorMessage = 'Please enter the verification code.');
+    if (email.isEmpty) {
+      setState(() => _errorMessage = 'Email address cannot be empty.');
+      return;
+    }
+
+    if (cleanToken.length < 6 || cleanToken.length > 8) {
+      setState(() => _errorMessage = 'Please enter a valid 6-digit verification code.');
       return;
     }
 
@@ -350,11 +501,38 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     try {
-      await _supabase.auth.verifyOTP(
-        email: email,
-        token: token,
-        type: OtpType.signup,
-      );
+      try {
+        await _supabase.auth.verifyOTP(
+          email: email,
+          token: cleanToken,
+          type: OtpType.signup,
+        );
+      } on AuthException catch (e) {
+        final msg = e.message.toLowerCase();
+        if (msg.contains('invalid') || msg.contains('expired') || msg.contains('not found')) {
+          try {
+            await _supabase.auth.verifyOTP(
+              email: email,
+              token: cleanToken,
+              type: OtpType.email,
+            );
+            return;
+          } catch (_) {
+            try {
+              await _supabase.auth.verifyOTP(
+                email: email,
+                token: cleanToken,
+                type: OtpType.magiclink,
+              );
+              return;
+            } catch (_) {
+              rethrow;
+            }
+          }
+        } else {
+          rethrow;
+        }
+      }
     } on AuthException catch (e) {
       setState(() => _errorMessage = e.message);
     } catch (e) {
@@ -364,8 +542,46 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  Future<void> _handleResendOtp() async {
+    final email = _emailController.text.trim().toLowerCase();
+    if (email.isEmpty) {
+      setState(() => _errorMessage = 'Please enter your registered email address.');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      try {
+        await _supabase.auth.resend(
+          type: OtpType.signup,
+          email: email,
+        );
+      } catch (_) {
+        await _supabase.auth.signInWithOtp(email: email);
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('A new 6-digit verification code has been sent to $email'),
+            backgroundColor: AppColors.accentEmerald,
+          ),
+        );
+      }
+    } on AuthException catch (e) {
+      setState(() => _errorMessage = e.message);
+    } catch (e) {
+      setState(() => _errorMessage = 'Failed to resend code: ${e.toString()}');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _handleSendResetOtp() async {
-    final email = _emailController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
     if (email.isEmpty) {
       setState(() => _errorMessage = 'Please enter your registered email.');
       return;
@@ -401,12 +617,17 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _handleResetPassword() async {
-    final email = _emailController.text.trim();
-    final token = _otpController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
+    final cleanToken = _otpController.text.replaceAll(RegExp(r'\D'), '').trim();
     final newPassword = _newPasswordController.text.trim();
 
-    if (token.isEmpty || newPassword.isEmpty) {
-      setState(() => _errorMessage = 'Please enter both the OTP code and new password.');
+    if (email.isEmpty) {
+      setState(() => _errorMessage = 'Email cannot be empty.');
+      return;
+    }
+
+    if (cleanToken.length < 6 || cleanToken.length > 8) {
+      setState(() => _errorMessage = 'Please enter a valid 6-digit OTP code.');
       return;
     }
 
@@ -421,14 +642,12 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     try {
-      // Verify OTP with recovery type
       await _supabase.auth.verifyOTP(
         email: email,
-        token: token,
+        token: cleanToken,
         type: OtpType.recovery,
       );
 
-      // Update password
       await _supabase.auth.updateUser(
         UserAttributes(password: newPassword),
       );
@@ -436,7 +655,7 @@ class _AuthScreenState extends State<AuthScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Password reset successful! Logging you in...'),
+            content: Text('Password reset successful! Logging you in...'),
             backgroundColor: AppColors.accentEmerald,
           ),
         );
@@ -452,16 +671,42 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        if (_mode != AuthMode.welcome) {
+          final shouldLeave = await showLeavePageConfirmation(
+            context,
+            title: 'Leave Screen?',
+            message: 'Are you sure you want to go back? Any entered details will be discarded.',
+            confirmLabel: 'Go Back',
+            cancelLabel: 'Stay',
+          );
+          if (shouldLeave && mounted) {
+            setState(() {
+              _mode = AuthMode.welcome;
+              _errorMessage = null;
+            });
+          }
+          return;
+        }
+
+        final shouldExit = await showExitAppConfirmation(context);
+        if (shouldExit && mounted) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Brand Icon & Title
+
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -496,7 +741,6 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     const SizedBox(height: 32),
 
-                    // Auth Form Card
                     GlassCard(
                       isStrong: true,
                       padding: const EdgeInsets.all(22),
@@ -507,7 +751,8 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
             ),
           ),
-        );
+        ),
+      );
   }
 
   Widget _buildFormContent() {
@@ -698,7 +943,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Enter the code sent to ${_emailController.text}',
+          'Enter the 6-digit code sent to ${_emailController.text.trim()}',
           style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
           textAlign: TextAlign.center,
         ),
@@ -706,14 +951,22 @@ class _AuthScreenState extends State<AuthScreen> {
         TextField(
           controller: _otpController,
           keyboardType: TextInputType.number,
-          maxLength: 8,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(8),
+          ],
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 22, letterSpacing: 4, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+            letterSpacing: 4,
+          ),
           decoration: InputDecoration(
             counterText: '',
             filled: true,
             fillColor: AppColors.surfaceMuted,
-            hintText: '12345678',
+            hintText: '123456',
             hintStyle: const TextStyle(color: AppColors.textMuted, letterSpacing: 4),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -727,6 +980,41 @@ class _AuthScreenState extends State<AuthScreen> {
           label: 'Confirm & Play',
           isLoading: _isLoading,
           onPressed: _handleVerifyOtp,
+        ),
+        const SizedBox(height: 14),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              onPressed: _isLoading ? null : _handleResendOtp,
+              child: const Text(
+                'Resend Code',
+                style: TextStyle(
+                  color: AppColors.primaryOrange,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const Text(
+              '•',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            TextButton(
+              onPressed: () => setState(() {
+                _mode = AuthMode.login;
+                _errorMessage = null;
+              }),
+              child: const Text(
+                'Back to Sign In',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -795,17 +1083,17 @@ class _AuthScreenState extends State<AuthScreen> {
         TextField(
           controller: _otpController,
           keyboardType: TextInputType.number,
-          maxLength: 8,
+          maxLength: 6,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 20, letterSpacing: 3, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+          style: const TextStyle(fontSize: 22, letterSpacing: 5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           decoration: InputDecoration(
             counterText: '',
             filled: true,
             fillColor: AppColors.surfaceMuted,
-            hintText: 'Enter 6 or 8-digit OTP',
+            hintText: 'Enter 6-digit OTP',
             hintStyle: const TextStyle(
               color: AppColors.textMuted,
-              letterSpacing: 1,
+              letterSpacing: 2,
               fontSize: 14,
             ),
             border: OutlineInputBorder(

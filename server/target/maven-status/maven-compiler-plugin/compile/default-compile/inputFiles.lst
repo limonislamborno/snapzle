@@ -3,6 +3,7 @@ D:\LiMoN\Programming\Git-Online\GitHub\Snapzle\server\src\main\java\com\snapzle\
 D:\LiMoN\Programming\Git-Online\GitHub\Snapzle\server\src\main\java\com\snapzle\controller\LeaderboardController.java
 D:\LiMoN\Programming\Git-Online\GitHub\Snapzle\server\src\main\java\com\snapzle\controller\PhotoController.java
 D:\LiMoN\Programming\Git-Online\GitHub\Snapzle\server\src\main\java\com\snapzle\controller\ProfileController.java
+D:\LiMoN\Programming\Git-Online\GitHub\Snapzle\server\src\main\java\com\snapzle\controller\PublicAuthController.java
 D:\LiMoN\Programming\Git-Online\GitHub\Snapzle\server\src\main\java\com\snapzle\dto\GameFinishRequest.java
 D:\LiMoN\Programming\Git-Online\GitHub\Snapzle\server\src\main\java\com\snapzle\dto\GameFinishResponse.java
 D:\LiMoN\Programming\Git-Online\GitHub\Snapzle\server\src\main\java\com\snapzle\dto\GameStartRequest.java

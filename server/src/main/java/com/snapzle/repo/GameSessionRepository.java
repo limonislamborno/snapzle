@@ -20,4 +20,6 @@ public interface GameSessionRepository extends JpaRepository<GameSession, UUID> 
 
     @Query("SELECT gs FROM GameSession gs WHERE gs.completed = true AND gs.verified = true AND gs.createdAt >= :since ORDER BY gs.score DESC")
     List<GameSession> findTopScoresSince(@Param("since") OffsetDateTime since, Pageable pageable);
+
+    void deleteByUserId(UUID userId);
 }

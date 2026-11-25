@@ -7,7 +7,7 @@ class AvatarView extends StatelessWidget {
   final bool hasRing;
   final String? photoUrl;
   final String? cartoonPhotoUrl;
-  final String avatarStyle; // 'original' | 'cartoon' | 'emoji'
+  final String avatarStyle;
 
   static const List<List<Color>> avatarGradients = [
     [Color(0xFF8B5CF6), Color(0xFF3B82F6)],
@@ -35,7 +35,7 @@ class AvatarView extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = avatarGradients[gradientIndex % avatarGradients.length];
     final bool isCartoon = avatarStyle == 'cartoon';
-    // When in cartoon mode, prioritize the accurately generated cartoon photo URL
+
     final String? activeUrl = (isCartoon && cartoonPhotoUrl != null && cartoonPhotoUrl!.trim().isNotEmpty)
         ? cartoonPhotoUrl
         : photoUrl;

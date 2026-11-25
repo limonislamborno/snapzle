@@ -2,31 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
-  // Off-white / Warm Ivory backgrounds
-  static const Color background = Color(0xFFF7F5F0); // Elegant warm off-white
-  static const Color backgroundSecondary = Color(0xFFFFFFFF); // Pure white cards & dialogs
-  static const Color surfaceMuted = Color(0xFFEDE9E3); // Soft elevated container surface
-  
-  // Brand Accents: Deep Orange & Royal Purple
-  static const Color primary = Color(0xFF7C3AED); // Royal Purple
-  static const Color primaryOrange = Color(0xFFEA580C); // Deep Orange
+
+  static const Color background = Color(0xFFF7F5F0);
+  static const Color backgroundSecondary = Color(0xFFFFFFFF);
+  static const Color surfaceMuted = Color(0xFFEDE9E3);
+
+  static const Color primary = Color(0xFF7C3AED);
+  static const Color primaryOrange = Color(0xFFEA580C);
   static const Color primaryBlue = Color(0xFF2563EB);
   static const Color accentPink = Color(0xFFDB2777);
   static const Color accentCyan = Color(0xFF0284C7);
   static const Color accentEmerald = Color(0xFF059669);
   static const Color accentAmber = Color(0xFFD97706);
 
-  // High-contrast Typography
-  static const Color textPrimary = Color(0xFF0F172A); // Slate 900
-  static const Color textSecondary = Color(0xFF475569); // Slate 600
-  static const Color textMuted = Color(0xFF94A3B8); // Slate 400
+  static const Color textPrimary = Color(0xFF0F172A);
+  static const Color textSecondary = Color(0xFF475569);
+  static const Color textMuted = Color(0xFF94A3B8);
 
-  // Cards & Borders
   static const Color glassFill = Color(0xFFFFFFFF);
   static const Color glassBorder = Color(0xFFE2E8F0);
   static const Color glassStrong = Color(0xFFFFFFFF);
 
-  // Gradients: Deep Orange & Royal Purple
   static const LinearGradient brandGradient = LinearGradient(
     colors: [primaryOrange, primary],
     begin: Alignment.topLeft,

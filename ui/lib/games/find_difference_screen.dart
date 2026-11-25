@@ -9,8 +9,8 @@ import 'game_result_dialog.dart';
 
 class SpotDifference {
   final int id;
-  final double xPct; // 0 to 100%
-  final double yPct; // 0 to 100%
+  final double xPct;
+  final double yPct;
   final double radiusPct;
   bool isFound;
 

@@ -23,7 +23,7 @@ class MemoryCardItem {
 
 class MemoryMatchScreen extends StatefulWidget {
   final List<String> photoUrls;
-  final int pairsCount; // 6 (Easy), 8 (Med), 10 (Hard)
+  final int pairsCount;
 
   const MemoryMatchScreen({
     super.key,
@@ -90,7 +90,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
       firstSelectedIdx = null;
 
       if (cards[firstIdx].id == cards[idx].id) {
-        // Matched!
+
         setState(() {
           cards[firstIdx].isMatched = true;
           cards[idx].isMatched = true;
@@ -135,7 +135,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
           });
         }
       } else {
-        // Mismatch - flip back after 700ms
+
         isBusy = true;
         Future.delayed(const Duration(milliseconds: 700), () {
           if (mounted) {
@@ -206,7 +206,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                   ],
                 ),
                 const SizedBox(height: 14),
-                // Auto-sizing single-screen grid (zero vertical scrolling guaranteed)
+
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
@@ -214,34 +214,31 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
                       final double availH = constraints.maxHeight;
                       final bool isLandscape = availW > availH;
 
-                      // Determine optimal columns & rows so all cards fit without scrolling
                       int cols;
                       if (isLandscape) {
                         if (cards.length <= 12) {
-                          cols = 4; // 4x3
+                          cols = 4;
                         } else if (cards.length <= 16) {
-                          cols = 4; // 4x4
+                          cols = 4;
                         } else {
-                          cols = 5; // 5x4
+                          cols = 5;
                         }
                       } else {
                         if (cards.length <= 12) {
-                          cols = 3; // 3x4
+                          cols = 3;
                         } else if (cards.length <= 16) {
-                          cols = 4; // 4x4
+                          cols = 4;
                         } else {
-                          cols = 4; // 4x5
+                          cols = 4;
                         }
                       }
 
                       final int rows = (cards.length + cols - 1) ~/ cols;
                       final double spacing = (cards.length >= 20 || rows >= 5) ? 6.0 : 8.0;
 
-                      // Maximum card dimensions
                       final double maxCardW = (availW - (cols - 1) * spacing) / cols;
                       final double maxCardH = (availH - (rows - 1) * spacing) / rows;
 
-                      // Optimal aspect ratio
                       double cardAspect = (maxCardW / maxCardH).clamp(0.70, 1.05);
 
                       double gridW = cols * (maxCardH * cardAspect) + (cols - 1) * spacing;

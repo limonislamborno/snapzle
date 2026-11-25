@@ -2,8 +2,14 @@ import 'package:dio/dio.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
-  // Deployed live backend on Render
-  static const String baseUrl = 'https://snapzle.onrender.com/api'; 
+  // 1. Live Production Backend on Render:
+  // static const String baseUrl = 'https://snapzle.onrender.com/api';
+
+  // 2. Local Spring Boot Backend (For USB physical device after `adb reverse tcp:8080 tcp:8080`, or Desktop/Chrome):
+  static const String baseUrl = 'http://localhost:8080/api';
+
+  // 3. Local Spring Boot Backend (For Android Emulator):
+  // static const String baseUrl = 'http://10.0.2.2:8080/api';
 
   final Dio _dio = Dio(BaseOptions(
     baseUrl: baseUrl,
@@ -76,5 +82,12 @@ class ApiService {
 
   Future<void> recordDailyLogin() async {
     await _dio.post('/profile/daily-login');
+  }
+
+  // Delete User Account
+  Future<void> deleteAccount() async {
+    try {
+      await _dio.delete('/profile/account');
+    } catch (_) {}
   }
 }

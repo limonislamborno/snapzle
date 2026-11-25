@@ -12,7 +12,7 @@ import 'game_result_dialog.dart';
 class PhotoPuzzleScreen extends StatefulWidget {
   final String imageUrl;
   final String photoId;
-  final int gridDim; // 3 for 3x3, 4 for 4x4, 5 for 5x5
+  final int gridDim;
   final String? sessionId;
 
   const PhotoPuzzleScreen({
@@ -182,7 +182,7 @@ class _PhotoPuzzleScreenState extends State<PhotoPuzzleScreen> {
                   children: [
                     CircularProgressIndicator(),
                     SizedBox(height: 16),
-                    Text('Slicing your photo into puzzle pieces...', style: const TextStyle(color: AppColors.textSecondary)),
+                    Text('Slicing your photo into puzzle pieces...', style: TextStyle(color: AppColors.textSecondary)),
                   ],
                 ),
               )

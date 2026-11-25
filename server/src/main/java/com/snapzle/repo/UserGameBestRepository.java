@@ -13,4 +13,5 @@ import java.util.UUID;
 public interface UserGameBestRepository extends JpaRepository<UserGameBest, UserGameBestId> {
     List<UserGameBest> findByUserId(UUID userId);
     Optional<UserGameBest> findByUserIdAndGameType(UUID userId, String gameType);
+    void deleteByUserId(UUID userId);
 }

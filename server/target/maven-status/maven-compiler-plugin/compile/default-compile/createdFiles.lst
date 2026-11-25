@@ -4,6 +4,7 @@ com\snapzle\security\JwtAuthenticationFilter.class
 com\snapzle\dto\LeaderboardEntryDto.class
 com\snapzle\controller\ProfileController.class
 com\snapzle\dto\GameFinishRequest.class
+com\snapzle\controller\PublicAuthController.class
 com\snapzle\service\ProceduralDiffService$Spot.class
 com\snapzle\entity\Profile$ProfileBuilder.class
 com\snapzle\controller\HealthController.class

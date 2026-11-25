@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface PhotoRepository extends JpaRepository<Photo, UUID> {
     List<Photo> findByUserIdOrderByCreatedAtDesc(UUID userId);
     long countByUserId(UUID userId);
+    void deleteByUserId(UUID userId);
 }

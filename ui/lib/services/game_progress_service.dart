@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class GameProgressService {
   static const int requiredPhotosToUnlock = 5;
 
-  /// User-scoped isolation: Each user's progress is stored under their unique Supabase UID
   static String get _userId => Supabase.instance.client.auth.currentUser?.id ?? 'guest';
 
   static String _photoPuzzle3Key(String uid) => 'snapzle_${uid}_cleared_photos_photo_puzzle_3';
@@ -13,14 +12,12 @@ class GameProgressService {
   static String _memoryMatch6Key(String uid) => 'snapzle_${uid}_wins_memory_match_6';
   static String _memoryMatch8Key(String uid) => 'snapzle_${uid}_wins_memory_match_8';
 
-  // In-memory sets & win counters scoped to the active user
   static Set<String> clearedPhotoPuzzle3 = {};
   static Set<String> clearedPhotoPuzzle4 = {};
   static Set<String> clearedSlidingPuzzle3 = {};
   static int memoryMatchWins6 = 0;
   static int memoryMatchWins8 = 0;
 
-  /// Resets in-memory caches (called on logout or account switch)
   static void resetInMemory() {
     clearedPhotoPuzzle3 = {};
     clearedPhotoPuzzle4 = {};
@@ -29,13 +26,11 @@ class GameProgressService {
     memoryMatchWins8 = 0;
   }
 
-  /// Loads saved progression for the currently authenticated user
   static Future<void> loadForCurrentUser() async {
     final uid = _userId;
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // Clean up any old un-namespaced keys from previous version
       await prefs.remove('snapzle_cleared_photos_photo_puzzle_3');
       await prefs.remove('snapzle_cleared_photos_photo_puzzle_4');
       await prefs.remove('snapzle_cleared_photos_sliding_puzzle_3');
@@ -50,7 +45,6 @@ class GameProgressService {
     } catch (_) {}
   }
 
-  // Check if a photo is already cleared in a tier for THIS user
   static bool isPhotoClearedInPhotoPuzzle(int dim, String photoId) {
     if (dim == 3) return clearedPhotoPuzzle3.contains(photoId);
     if (dim == 4) return clearedPhotoPuzzle4.contains(photoId);
@@ -62,7 +56,6 @@ class GameProgressService {
     return false;
   }
 
-  // Check if a tier is unlocked (requires 5 distinct photo clears by THIS user)
   static bool isPhotoPuzzleUnlocked(int dim) {
     if (dim == 3) return true;
     if (dim == 4) return clearedPhotoPuzzle3.length >= requiredPhotosToUnlock;
@@ -83,7 +76,6 @@ class GameProgressService {
     return false;
   }
 
-  /// Records a win in Photo Puzzle with a specific photoId for the active user
   static Future<({bool isNewPhoto, int totalCleared, bool unlockedNextTier})> recordPhotoPuzzleWin({
     required int dim,
     required String photoId,
@@ -126,7 +118,6 @@ class GameProgressService {
     return (isNewPhoto: false, totalCleared: 0, unlockedNextTier: false);
   }
 
-  /// Records a win in Sliding Puzzle with a specific photoId for the active user
   static Future<({bool isNewPhoto, int totalCleared, bool unlockedNextTier})> recordSlidingPuzzleWin({
     required int dim,
     required String photoId,
@@ -155,7 +146,6 @@ class GameProgressService {
     return (isNewPhoto: false, totalCleared: 0, unlockedNextTier: false);
   }
 
-  /// Records a win in Memory Match for the active user
   static Future<({int totalWins, bool unlockedNextTier})> recordMemoryMatchWin(int pairs) async {
     final uid = _userId;
     bool unlockedNextTier = false;

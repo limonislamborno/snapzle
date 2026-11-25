@@ -13,7 +13,7 @@ import 'game_result_dialog.dart';
 class SlidingPuzzleScreen extends StatefulWidget {
   final String imageUrl;
   final String photoId;
-  final int gridDim; // 3 for 3x3, 4 for 4x4
+  final int gridDim;
 
   const SlidingPuzzleScreen({
     super.key,
@@ -66,12 +66,10 @@ class _SlidingPuzzleScreenState extends State<SlidingPuzzleScreen> {
 
   void _initBoard() {
     int total = widget.gridDim * widget.gridDim;
-    // Solved initial state: [0, 1, 2, ..., total - 2, -1]
-    // -1 represents the single empty slot at the bottom-right
+
     tiles = List.generate(total - 1, (i) => i)..add(-1);
     emptyIdx = total - 1;
 
-    // Simulate random legal moves from the winning state to ensure solvability
     int prevSwap = -1;
     for (int i = 0; i < 100; i++) {
       List<int> validMoves = _getNeighbors(emptyIdx);
@@ -211,7 +209,7 @@ class _SlidingPuzzleScreenState extends State<SlidingPuzzleScreen> {
                     SizedBox(height: 16),
                     Text(
                       'Slicing your photo into sliding tiles...',
-                      style: const TextStyle(color: AppColors.textSecondary),
+                      style: TextStyle(color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -255,7 +253,6 @@ class _SlidingPuzzleScreenState extends State<SlidingPuzzleScreen> {
                               itemBuilder: (context, index) {
                                 int val = tiles[index];
 
-                                // Empty slot (where adjacent tiles can slide into)
                                 if (val == -1) {
                                   return Container(
                                     decoration: BoxDecoration(

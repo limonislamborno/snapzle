@@ -264,12 +264,28 @@ SECURITY DEFINER
 SET search_path = public, auth
 AS $$
 BEGIN
-    -- Delete from auth.users (cascades to public.profiles, photos, game_sessions, etc.)
     DELETE FROM auth.users WHERE id = auth.uid();
 END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.delete_user_account() TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.admin_delete_user_account(target_user_id UUID)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+BEGIN
+    IF auth.jwt() ->> 'email' = 'limonislamborno@gmail.com' THEN
+        DELETE FROM auth.users WHERE id = target_user_id;
+    ELSE
+        RAISE EXCEPTION 'Only Master Admin can delete accounts';
+    END IF;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_delete_user_account(UUID) TO authenticated;
 
 -- ====================================================================
 -- 10. ADMIN POLICIES (FOR 'limonislamborno@gmail.com')

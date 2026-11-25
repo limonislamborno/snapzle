@@ -1489,6 +1489,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         final isMe = player['id'] == currentUserId;
                         final points = player['points'] ?? 0;
                         final name = player['username'] ?? 'Player_$rank';
+                        final avatarData = _resolvePlayerAvatar(player, currentUserId);
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
@@ -1508,9 +1509,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                 ),
                                 const SizedBox(width: 12),
                                 AvatarView(
-                                  emoji: player['avatar_emoji'] ?? '🦊',
-                                  gradientIndex: player['avatar_gradient'] ?? (i % 8),
-                                  size: 36,
+                                  photoUrl: avatarData['avatarUrl'],
+                                  cartoonPhotoUrl: avatarData['cartoonUrl'],
+                                  avatarStyle: avatarData['avatarStyle'],
+                                  emoji: avatarData['emoji'],
+                                  gradientIndex: avatarData['gradientIndex'],
+                                  size: 40,
+                                  hasRing: true,
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -1570,106 +1575,75 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     final top2 = _leaderboard.length > 1 ? _leaderboard[1] : null;
     final top3 = _leaderboard.length > 2 ? _leaderboard[2] : null;
 
-    return Container(
-      padding: const EdgeInsets.only(top: 32, bottom: 6, left: 4, right: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.65),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.glassBorder, width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryOrange.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
+    return Padding(
+      padding: const EdgeInsets.only(top: 14.0, bottom: 8.0),
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (top2 != null)
+              _podiumHeroCard(
+                topTag: 'TOP 2',
+                player: top2,
+                accentColor: const Color(0xFF0284C7),
+                glowColor: const Color(0xFF38BDF8),
+                crestGradient: const [Color(0xFFE2E8F0), Color(0xFF38BDF8), Color(0xFF0284C7)],
+                currentUserId: currentUserId,
+                headerIcon: LucideIcons.medal,
+                tierLabel: 'RUNNER UP',
+                scoreIcon: LucideIcons.flame,
+                isChampion: false,
+                cardWidth: 108,
+                photoHeight: 114,
+              )
+            else
+              const SizedBox(width: 108),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
+            const SizedBox(width: 12),
 
-              if (top2 != null)
-                _podiumPillar(
-                  rank: '#2',
-                  player: top2,
-                  height: 114,
-                  width: 104,
-                  color: AppColors.primaryBlue,
-                  glowColor: const Color(0xFF38BDF8),
-                  ringColors: const [Color(0xFFFFFFFF), Color(0xFF94A3B8), Color(0xFF0284C7), Color(0xFFE2E8F0)],
-                  currentUserId: currentUserId,
-                  badgeIcon: LucideIcons.medal,
-                  avatarSize: 96,
-                  numeralWatermark: '2',
-                  tierLabel: 'RUNNER UP',
-                  scoreIcon: LucideIcons.flame,
-                  isChampion: false,
-                )
-              else
-                const SizedBox(width: 104),
-
-              if (top1 != null)
-                _podiumPillar(
-                  rank: '#1',
+            if (top1 != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: _podiumHeroCard(
+                  topTag: 'TOP 1',
                   player: top1,
-                  height: 154,
-                  width: 126,
-                  color: AppColors.accentAmber,
+                  accentColor: const Color(0xFFD97706),
                   glowColor: const Color(0xFFF59E0B),
-                  ringColors: const [Color(0xFFFFDF00), Color(0xFFF59E0B), Color(0xFFB45309), Color(0xFFFFE082)],
+                  crestGradient: const [Color(0xFFFFDF00), Color(0xFFF59E0B), Color(0xFFB45309)],
                   currentUserId: currentUserId,
-                  badgeIcon: LucideIcons.crown,
-                  avatarSize: 116,
-                  numeralWatermark: '1',
-                  tierLabel: 'CHAMPION',
+                  headerIcon: LucideIcons.crown,
+                  tierLabel: '★ CHAMPION ★',
                   scoreIcon: LucideIcons.sparkles,
                   isChampion: true,
-                )
-              else
-                const SizedBox(width: 126),
+                  cardWidth: 134,
+                  photoHeight: 144,
+                ),
+              )
+            else
+              const SizedBox(width: 134),
 
-              if (top3 != null)
-                _podiumPillar(
-                  rank: '#3',
-                  player: top3,
-                  height: 88,
-                  width: 104,
-                  color: AppColors.accentEmerald,
-                  glowColor: const Color(0xFFEA580C),
-                  ringColors: const [Color(0xFFFFEDD5), Color(0xFFFB923C), Color(0xFF9A3412), Color(0xFFFDBA74)],
-                  currentUserId: currentUserId,
-                  badgeIcon: LucideIcons.trophy,
-                  avatarSize: 90,
-                  numeralWatermark: '3',
-                  tierLabel: '3RD PLACE',
-                  scoreIcon: LucideIcons.award,
-                  isChampion: false,
-                )
-              else
-                const SizedBox(width: 104),
-            ],
-          ),
+            const SizedBox(width: 12),
 
-          Container(
-            height: 10,
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primaryOrange.withValues(alpha: 0.15),
-                  const Color(0xFFF59E0B).withValues(alpha: 0.65),
-                  AppColors.primaryOrange.withValues(alpha: 0.15),
-                ],
-              ),
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
-            ),
-          ),
-          const SizedBox(height: 6),
-        ],
+            if (top3 != null)
+              _podiumHeroCard(
+                topTag: 'TOP 3',
+                player: top3,
+                accentColor: const Color(0xFFEA580C),
+                glowColor: const Color(0xFFF97316),
+                crestGradient: const [Color(0xFFFFEDD5), Color(0xFFFB923C), Color(0xFFC2410C)],
+                currentUserId: currentUserId,
+                headerIcon: LucideIcons.trophy,
+                tierLabel: '3RD PLACE',
+                scoreIcon: LucideIcons.award,
+                isChampion: false,
+                cardWidth: 108,
+                photoHeight: 114,
+              )
+            else
+              const SizedBox(width: 108),
+          ],
+        ),
       ),
     );
   }
@@ -1694,303 +1668,299 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     };
   }
 
-  Widget _podiumPillar({
-    required String rank,
+  Widget _podiumHeroCard({
+    required String topTag,
     required Map<String, dynamic> player,
-    required double height,
-    required double width,
-    required Color color,
+    required Color accentColor,
     required Color glowColor,
-    required List<Color> ringColors,
+    required List<Color> crestGradient,
     required String? currentUserId,
-    required IconData badgeIcon,
-    required double avatarSize,
-    required String numeralWatermark,
+    required IconData headerIcon,
     required String tierLabel,
     required IconData scoreIcon,
     required bool isChampion,
+    required double cardWidth,
+    required double photoHeight,
   }) {
     final avatarData = _resolvePlayerAvatar(player, currentUserId);
     final name = player['username'] ?? 'Player';
     final pts = '${player['points'] ?? 0} pts';
     final isMe = player['id'] == currentUserId;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2.0),
-      child: Column(
-        children: [
+    final avatarUrl = avatarData['avatarUrl'] as String?;
+    final cartoonUrl = avatarData['cartoonUrl'] as String?;
+    final avatarStyle = avatarData['avatarStyle'] as String? ?? 'original';
+    final emoji = avatarData['emoji'] as String? ?? '🦊';
+    final gradientIndex = (avatarData['gradientIndex'] as num?)?.toInt() ?? 0;
 
-          Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
+    final isCartoon = avatarStyle == 'cartoon';
+    final activeUrl = (isCartoon && cartoonUrl != null && cartoonUrl.trim().isNotEmpty)
+        ? cartoonUrl
+        : avatarUrl;
+    final hasPhoto = activeUrl != null && activeUrl.trim().isNotEmpty;
 
-              Container(
-                width: avatarSize + (isChampion ? 26 : 18),
-                height: avatarSize + (isChampion ? 26 : 18),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: glowColor.withValues(alpha: isChampion ? 0.48 : 0.32),
-                      blurRadius: isChampion ? 24 : 18,
-                      spreadRadius: isChampion ? 5 : 3,
-                    ),
-                  ],
-                ),
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.topCenter,
+      children: [
+        Container(
+          width: cardWidth,
+          padding: const EdgeInsets.fromLTRB(6, 15, 6, 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: isChampion ? const Color(0xFFF59E0B) : accentColor.withValues(alpha: 0.65),
+              width: isChampion ? 2.2 : 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: glowColor.withValues(alpha: isChampion ? 0.35 : 0.18),
+                blurRadius: isChampion ? 20 : 12,
+                spreadRadius: isChampion ? 2 : 0,
+                offset: const Offset(0, 4),
               ),
-
-              Container(
-                padding: EdgeInsets.all(isChampion ? 5.0 : 3.8),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: ringColors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  border: Border.all(
-                    color: Colors.white,
-                    width: isChampion ? 2.8 : 2.0,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.20),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(2.5),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                  ),
-                  child: AvatarView(
-                    photoUrl: avatarData['avatarUrl'],
-                    cartoonPhotoUrl: avatarData['cartoonUrl'],
-                    avatarStyle: avatarData['avatarStyle'],
-                    emoji: avatarData['emoji'],
-                    gradientIndex: avatarData['gradientIndex'],
-                    size: avatarSize,
-                    hasRing: false,
-                  ),
-                ),
-              ),
-
-              Positioned(
-                top: isChampion ? -24 : -18,
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isChampion ? 10 : 8,
-                    vertical: isChampion ? 4.5 : 3.5,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isChampion
-                          ? const [Color(0xFFFFFBEB), Color(0xFFFDE68A), Color(0xFFF59E0B)]
-                          : [Colors.white, ringColors.first],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: isChampion ? const Color(0xFFD97706) : glowColor.withValues(alpha: 0.8),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: glowColor.withValues(alpha: 0.50),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        badgeIcon,
-                        color: isChampion ? const Color(0xFFB45309) : glowColor,
-                        size: isChampion ? 19 : 14,
-                      ),
-                      if (isChampion) ...[
-                        const SizedBox(width: 4),
-                        const Text(
-                          'MVP',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFFB45309),
-                            letterSpacing: 0.6,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-
-              Positioned(
-                bottom: isChampion ? -11 : -9,
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isChampion ? 12 : 9,
-                    vertical: isChampion ? 3.5 : 2.5,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [glowColor, glowColor.withValues(alpha: 0.90)],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white, width: isChampion ? 2.2 : 1.6),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.28),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isChampion) ...[
-                        const Icon(LucideIcons.sparkles, color: Colors.white, size: 11),
-                        const SizedBox(width: 3),
-                      ],
-                      Text(
-                        rank,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: isChampion ? 13 : 11.5,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  height: photoHeight,
+                  width: double.infinity,
+                  color: AppColors.surfaceMuted,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      if (hasPhoto)
+                        Image.network(
+                          activeUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => _buildFallbackEmoji(emoji, gradientIndex, photoHeight),
+                          loadingBuilder: (_, child, progress) {
+                            if (progress == null) return child;
+                            return const Center(
+                              child: SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            );
+                          },
+                        )
+                      else
+                        _buildFallbackEmoji(emoji, gradientIndex, photoHeight),
 
-          const SizedBox(height: 14),
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: 42,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.78),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                        ),
+                      ),
 
-          SizedBox(
-            width: width,
-            child: Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: isMe ? FontWeight.w900 : FontWeight.bold,
-                fontSize: isChampion ? 13 : 12,
-                color: isMe ? AppColors.primaryOrange : AppColors.textPrimary,
+                      Positioned(
+                        bottom: 4,
+                        left: 4,
+                        right: 4,
+                        child: Text(
+                          isMe ? '$name (YOU)' : name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: isMe ? const Color(0xFFFDE047) : Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: isChampion ? 12 : 10.5,
+                            shadows: const [
+                              Shadow(color: Colors.black87, blurRadius: 4),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      if (isCartoon && hasPhoto)
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E1B4B).withValues(alpha: 0.9),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: const Color(0xFF06B6D4), width: 1.2),
+                            ),
+                            child: const Icon(LucideIcons.sparkles, size: 9, color: Color(0xFFFBBF24)),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 4),
 
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              const SizedBox(height: 6),
+
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                decoration: BoxDecoration(
+                  color: glowColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: glowColor.withValues(alpha: 0.35), width: 0.8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(scoreIcon, size: 10, color: glowColor),
+                    const SizedBox(width: 3),
+                    Text(
+                      pts,
+                      style: TextStyle(
+                        color: glowColor,
+                        fontSize: isChampion ? 11 : 10,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 5),
+
+              if (isChampion)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(6),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFF59E0B).withValues(alpha: 0.45),
+                        blurRadius: 6,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    tierLabel,
+                    style: const TextStyle(
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.6,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: accentColor.withValues(alpha: 0.35),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Text(
+                    tierLabel,
+                    style: TextStyle(
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                      color: accentColor,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+
+        Positioned(
+          top: isChampion ? -13 : -11,
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: isChampion ? 10 : 8,
+              vertical: isChampion ? 3.5 : 2.5,
+            ),
             decoration: BoxDecoration(
-              color: glowColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: glowColor.withValues(alpha: 0.35), width: 1),
+              gradient: LinearGradient(
+                colors: crestGradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white, width: isChampion ? 1.6 : 1.3),
+              boxShadow: [
+                BoxShadow(
+                  color: glowColor.withValues(alpha: 0.50),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(scoreIcon, size: 10, color: glowColor),
-                const SizedBox(width: 4),
+                Icon(
+                  headerIcon,
+                  size: isChampion ? 12 : 10.5,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 3.5),
                 Text(
-                  pts,
+                  topTag,
                   style: TextStyle(
-                    color: glowColor,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: isChampion ? 11 : 9.5,
+                    letterSpacing: 0.6,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 8),
+        ),
+      ],
+    );
+  }
 
-          Container(
-            width: width,
-            height: height,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  glowColor.withValues(alpha: isChampion ? 0.45 : 0.35),
-                  glowColor.withValues(alpha: 0.10),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              border: Border(
-                top: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  width: 2.5,
-                ),
-                left: BorderSide(
-                  color: glowColor.withValues(alpha: 0.5),
-                  width: 1.5,
-                ),
-                right: BorderSide(
-                  color: glowColor.withValues(alpha: 0.5),
-                  width: 1.5,
-                ),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: glowColor.withValues(alpha: 0.18),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-
-                Container(
-                  width: width * 0.45,
-                  height: 3,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.7),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(height: 6),
-
-                Text(
-                  numeralWatermark,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: isChampion ? 38 : 30,
-                    color: glowColor.withValues(alpha: 0.85),
-                  ),
-                ),
-                Text(
-                  tierLabel,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.8,
-                    color: glowColor.withValues(alpha: 0.9),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+  Widget _buildFallbackEmoji(String emoji, int gradientIndex, double height) {
+    final colors = AvatarView.avatarGradients[gradientIndex % AvatarView.avatarGradients.length];
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: colors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          emoji,
+          style: TextStyle(fontSize: height * 0.42),
+        ),
       ),
     );
   }

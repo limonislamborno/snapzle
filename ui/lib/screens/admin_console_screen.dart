@@ -260,6 +260,99 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> with SingleTick
     }
   }
 
+  Future<void> _deletePlayerAccountAsAdmin(Map<String, dynamic> player) async {
+    final username = player['username'] ?? 'Player';
+    final email = player['email'] ?? '';
+    final targetUserId = player['id'] as String;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.backgroundSecondary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(LucideIcons.trash2, color: Colors.redAccent, size: 22),
+            SizedBox(width: 8),
+            Text('Delete Account?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+          ],
+        ),
+        content: Text(
+          'Permanently delete player @$username ($email)?\n\nAll their uploaded photos, scores, best records, and profile will be deleted forever. This action cannot be undone.',
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete Account'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final photosData = await _supabase
+            .from('photos')
+            .select('storage_path, diff_storage_path')
+            .eq('user_id', targetUserId);
+
+        final List<String> pathsToDelete = [];
+        for (final row in photosData) {
+          final sPath = row['storage_path'] as String?;
+          if (sPath != null && sPath.isNotEmpty) pathsToDelete.add(sPath);
+          final dPath = row['diff_storage_path'] as String?;
+          if (dPath != null && dPath.isNotEmpty) pathsToDelete.add(dPath);
+        }
+        if (pathsToDelete.isNotEmpty) {
+          try {
+            await _supabase.storage.from('user-photos').remove(pathsToDelete);
+          } catch (_) {}
+        }
+
+        try {
+          await _supabase.rpc('admin_delete_user_account', params: {'target_user_id': targetUserId});
+        } catch (_) {
+          try {
+            await _supabase.from('photos').delete().eq('user_id', targetUserId);
+            await _supabase.from('game_sessions').delete().eq('user_id', targetUserId);
+            await _supabase.from('user_game_bests').delete().eq('user_id', targetUserId);
+            await _supabase.from('user_achievements').delete().eq('user_id', targetUserId);
+            await _supabase.from('user_challenge_progress').delete().eq('user_id', targetUserId);
+            await _supabase.from('profiles').delete().eq('id', targetUserId);
+          } catch (_) {}
+        }
+
+        await _loadAdminData();
+        if (mounted) {
+          await showAppNoticeDialog(
+            context,
+            title: 'Account Deleted',
+            message: 'Player @$username has been permanently deleted.',
+            icon: LucideIcons.circleCheck,
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          await showAppNoticeDialog(
+            context,
+            title: 'Delete Failed',
+            message: 'Failed to delete account: $e',
+            icon: LucideIcons.circleAlert,
+          );
+        }
+      }
+    }
+  }
+
   String _formatDate(dynamic timestamp) {
     if (timestamp == null) return 'N/A';
     try {
@@ -940,6 +1033,12 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> with SingleTick
                                 tooltip: 'Reset Points',
                                 onPressed: () => _resetPlayerPoints(p),
                               ),
+                              if (p['id'] != _supabase.auth.currentUser?.id)
+                                IconButton(
+                                  icon: const Icon(LucideIcons.trash2, size: 18, color: Colors.redAccent),
+                                  tooltip: 'Delete Account',
+                                  onPressed: () => _deletePlayerAccountAsAdmin(p),
+                                ),
                             ],
                           ),
 

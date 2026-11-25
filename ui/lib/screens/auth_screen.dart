@@ -704,18 +704,30 @@ class _AuthScreenState extends State<AuthScreen> {
                   children: [
 
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      width: 88,
+                      height: 88,
                       decoration: BoxDecoration(
-                        gradient: AppColors.brandGradient,
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.5),
-                            blurRadius: 20,
-                          )
+                            color: AppColors.primaryOrange.withValues(alpha: 0.35),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
                         ],
                       ),
-                      child: const Icon(LucideIcons.gamepad2, size: 44, color: Colors.white),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(22),
+                        child: Image.asset(
+                          'assets/icon/app_icon.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     const Text(

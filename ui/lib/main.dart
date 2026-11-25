@@ -1577,73 +1577,90 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(top: 14.0, bottom: 8.0),
-      child: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (top2 != null)
-              _podiumHeroCard(
-                topTag: 'TOP 2',
-                player: top2,
-                accentColor: const Color(0xFF0284C7),
-                glowColor: const Color(0xFF38BDF8),
-                crestGradient: const [Color(0xFFE2E8F0), Color(0xFF38BDF8), Color(0xFF0284C7)],
-                currentUserId: currentUserId,
-                headerIcon: LucideIcons.medal,
-                tierLabel: 'RUNNER UP',
-                scoreIcon: LucideIcons.flame,
-                isChampion: false,
-                cardWidth: 108,
-                photoHeight: 114,
-              )
-            else
-              const SizedBox(width: 108),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxW = constraints.maxWidth;
+          final spacing = (maxW < 350) ? 6.0 : 8.0;
+          final availableForCards = maxW - (spacing * 2);
 
-            const SizedBox(width: 12),
+          final sideCardWidth = ((availableForCards * 0.305).clamp(84.0, 112.0)).floorToDouble();
+          final centerCardWidth = (availableForCards - (sideCardWidth * 2)).clamp(104.0, 136.0).floorToDouble();
 
-            if (top1 != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: _podiumHeroCard(
-                  topTag: 'TOP 1',
-                  player: top1,
-                  accentColor: const Color(0xFFD97706),
-                  glowColor: const Color(0xFFF59E0B),
-                  crestGradient: const [Color(0xFFFFDF00), Color(0xFFF59E0B), Color(0xFFB45309)],
-                  currentUserId: currentUserId,
-                  headerIcon: LucideIcons.crown,
-                  tierLabel: '★ CHAMPION ★',
-                  scoreIcon: LucideIcons.sparkles,
-                  isChampion: true,
-                  cardWidth: 134,
-                  photoHeight: 144,
-                ),
-              )
-            else
-              const SizedBox(width: 134),
+          final sidePhotoHeight = (sideCardWidth * 1.05).roundToDouble();
+          final centerPhotoHeight = (centerCardWidth * 1.05).roundToDouble();
 
-            const SizedBox(width: 12),
+          return Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (top2 != null)
+                    _podiumHeroCard(
+                      topTag: 'TOP 2',
+                      player: top2,
+                      accentColor: const Color(0xFF0284C7),
+                      glowColor: const Color(0xFF38BDF8),
+                      crestGradient: const [Color(0xFFE2E8F0), Color(0xFF38BDF8), Color(0xFF0284C7)],
+                      currentUserId: currentUserId,
+                      headerIcon: LucideIcons.medal,
+                      tierLabel: 'RUNNER UP',
+                      scoreIcon: LucideIcons.flame,
+                      isChampion: false,
+                      cardWidth: sideCardWidth,
+                      photoHeight: sidePhotoHeight,
+                    )
+                  else
+                    SizedBox(width: sideCardWidth),
 
-            if (top3 != null)
-              _podiumHeroCard(
-                topTag: 'TOP 3',
-                player: top3,
-                accentColor: const Color(0xFFEA580C),
-                glowColor: const Color(0xFFF97316),
-                crestGradient: const [Color(0xFFFFEDD5), Color(0xFFFB923C), Color(0xFFC2410C)],
-                currentUserId: currentUserId,
-                headerIcon: LucideIcons.trophy,
-                tierLabel: '3RD PLACE',
-                scoreIcon: LucideIcons.award,
-                isChampion: false,
-                cardWidth: 108,
-                photoHeight: 114,
-              )
-            else
-              const SizedBox(width: 108),
-          ],
-        ),
+                  SizedBox(width: spacing),
+
+                  if (top1 != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: _podiumHeroCard(
+                        topTag: 'TOP 1',
+                        player: top1,
+                        accentColor: const Color(0xFFD97706),
+                        glowColor: const Color(0xFFF59E0B),
+                        crestGradient: const [Color(0xFFFFDF00), Color(0xFFF59E0B), Color(0xFFB45309)],
+                        currentUserId: currentUserId,
+                        headerIcon: LucideIcons.crown,
+                        tierLabel: '★ CHAMPION ★',
+                        scoreIcon: LucideIcons.sparkles,
+                        isChampion: true,
+                        cardWidth: centerCardWidth,
+                        photoHeight: centerPhotoHeight,
+                      ),
+                    )
+                  else
+                    SizedBox(width: centerCardWidth),
+
+                  SizedBox(width: spacing),
+
+                  if (top3 != null)
+                    _podiumHeroCard(
+                      topTag: 'TOP 3',
+                      player: top3,
+                      accentColor: const Color(0xFFEA580C),
+                      glowColor: const Color(0xFFF97316),
+                      crestGradient: const [Color(0xFFFFEDD5), Color(0xFFFB923C), Color(0xFFC2410C)],
+                      currentUserId: currentUserId,
+                      headerIcon: LucideIcons.trophy,
+                      tierLabel: '3RD PLACE',
+                      scoreIcon: LucideIcons.award,
+                      isChampion: false,
+                      cardWidth: sideCardWidth,
+                      photoHeight: sidePhotoHeight,
+                    )
+                  else
+                    SizedBox(width: sideCardWidth),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -1705,7 +1722,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       children: [
         Container(
           width: cardWidth,
-          padding: const EdgeInsets.fromLTRB(6, 15, 6, 8),
+          padding: const EdgeInsets.fromLTRB(4, 15, 4, 8),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(18),

@@ -1002,10 +1002,11 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> with SingleTick
                                 ),
                               ),
 
+                              const SizedBox(width: 8),
                               Tooltip(
                                 message: isActive ? 'Click to Deactivate' : 'Click to Activate',
                                 child: Transform.scale(
-                                  scale: 0.78,
+                                  scale: 0.82,
                                   child: Switch(
                                     value: isActive,
                                     activeThumbColor: AppColors.accentEmerald,
@@ -1017,62 +1018,92 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> with SingleTick
                                   ),
                                 ),
                               ),
-                              IconButton(
-                                icon: const Icon(LucideIcons.images, size: 19, color: AppColors.primary),
-                                tooltip: 'View Photos',
-                                onPressed: () {
-                                  setState(() {
-                                    _previousTabIndex = 1;
-                                    _selectedUserFilter = p['id'] as String?;
-                                    _tabController.animateTo(2);
-                                  });
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(LucideIcons.rotateCcw, size: 18, color: AppColors.primaryOrange),
-                                tooltip: 'Reset Points',
-                                onPressed: () => _resetPlayerPoints(p),
-                              ),
-                              if (p['id'] != _supabase.auth.currentUser?.id)
-                                IconButton(
-                                  icon: const Icon(LucideIcons.trash2, size: 18, color: Colors.redAccent),
-                                  tooltip: 'Delete Account',
-                                  onPressed: () => _deletePlayerAccountAsAdmin(p),
-                                ),
                             ],
                           ),
 
                           const SizedBox(height: 10),
                           const Divider(height: 1, color: AppColors.glassBorder),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
 
                           Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              const Icon(LucideIcons.mail, size: 14, color: AppColors.textMuted),
-                              const SizedBox(width: 8),
                               Expanded(
-                                child: Text(
-                                  email,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Icon(LucideIcons.mail, size: 14, color: AppColors.textMuted),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            email,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: AppColors.textPrimary,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        const Icon(LucideIcons.calendar, size: 14, color: AppColors.textMuted),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'Created: $createdAt',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-
-                          Row(
-                            children: [
-                              const Icon(LucideIcons.calendar, size: 14, color: AppColors.textMuted),
                               const SizedBox(width: 8),
-                              Text(
-                                'Created: $createdAt',
-                                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.all(6),
+                                    constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                                    icon: const Icon(LucideIcons.images, size: 18, color: AppColors.primary),
+                                    tooltip: 'View Photos',
+                                    onPressed: () {
+                                      setState(() {
+                                        _previousTabIndex = 1;
+                                        _selectedUserFilter = p['id'] as String?;
+                                        _tabController.animateTo(2);
+                                      });
+                                    },
+                                  ),
+                                  IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.all(6),
+                                    constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                                    icon: const Icon(LucideIcons.rotateCcw, size: 18, color: AppColors.primaryOrange),
+                                    tooltip: 'Reset Points',
+                                    onPressed: () => _resetPlayerPoints(p),
+                                  ),
+                                  if (p['id'] != _supabase.auth.currentUser?.id)
+                                    IconButton(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.all(6),
+                                      constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                                      icon: const Icon(LucideIcons.trash2, size: 18, color: Colors.redAccent),
+                                      tooltip: 'Delete Account',
+                                      onPressed: () => _deletePlayerAccountAsAdmin(p),
+                                    ),
+                                ],
                               ),
                             ],
                           ),

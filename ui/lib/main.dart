@@ -233,7 +233,11 @@ class _MainShellScreenState extends State<MainShellScreen> {
               index: _currentIndex,
               children: [
                 const HomeScreen(),
-                const GamesHubScreen(),
+                GamesHubScreen(
+                  onNavigateTab: (idx) {
+                    if (mounted) setState(() => _currentIndex = idx);
+                  },
+                ),
                 const LeaderboardScreen(),
                 const PhotoLibraryScreen(),
                 const ProfileScreen(),
@@ -575,7 +579,8 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class GamesHubScreen extends StatefulWidget {
-  const GamesHubScreen({super.key});
+  final ValueChanged<int>? onNavigateTab;
+  const GamesHubScreen({super.key, this.onNavigateTab});
 
   @override
   State<GamesHubScreen> createState() => _GamesHubScreenState();
@@ -1010,8 +1015,8 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
       await _loadPhotos();
     }
     if (!context.mounted) return;
-    if (_photos.isEmpty) {
-      _showUploadRequiredDialog('Memory Match');
+    if (_photos.length < 6) {
+      _showUploadRequiredDialog('Memory Match', minRequired: 6);
       return;
     }
 
@@ -1030,23 +1035,30 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
             final tiers = [
               {
                 'pairs': 6,
+                'minPhotos': 6,
                 'label': '6 Pairs (Easy)',
                 'progress': '${GameProgressService.memoryMatchWins6}/5 wins',
                 'prereq': 0,
               },
               {
                 'pairs': 8,
+                'minPhotos': 8,
                 'label': '8 Pairs (Medium)',
                 'progress': GameProgressService.memoryMatchWins6 >= 5
-                    ? '${GameProgressService.memoryMatchWins8}/5 wins'
+                    ? (_photos.length >= 8
+                        ? '${GameProgressService.memoryMatchWins8}/5 wins'
+                        : 'Needs 8 photos (${_photos.length}/8)')
                     : '${GameProgressService.memoryMatchWins6}/5 to unlock',
                 'prereq': GameProgressService.memoryMatchWins6,
               },
               {
                 'pairs': 10,
+                'minPhotos': 10,
                 'label': '10 Pairs (Hard)',
                 'progress': GameProgressService.memoryMatchWins8 >= 5
-                    ? 'Master'
+                    ? (_photos.length >= 10
+                        ? 'Master'
+                        : 'Needs 10 photos (${_photos.length}/10)')
                     : '${GameProgressService.memoryMatchWins8}/5 to unlock',
                 'prereq': GameProgressService.memoryMatchWins8,
               },
@@ -1073,17 +1085,20 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                   Column(
                     children: tiers.map((tier) {
                       int pairs = tier['pairs'] as int;
+                      int minPhotos = tier['minPhotos'] as int;
                       String label = tier['label'] as String;
                       String progress = tier['progress'] as String;
                       int prereq = tier['prereq'] as int;
-                      bool isUnlocked = GameProgressService.isMemoryMatchUnlocked(pairs);
+                      bool isProgressUnlocked = GameProgressService.isMemoryMatchUnlocked(pairs);
+                      bool hasEnoughPhotos = _photos.length >= minPhotos;
+                      bool isUnlocked = isProgressUnlocked && hasEnoughPhotos;
                       bool isSel = selectedPairs == pairs;
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: InkWell(
                           onTap: () {
-                            if (!isUnlocked) {
+                            if (!isProgressUnlocked) {
                               showAppNoticeDialog(
                                 context,
                                 title: 'Level Locked',
@@ -1092,6 +1107,11 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                                     : 'Win 5 games on 8-Pairs to unlock 10-Pairs! ($prereq/5 done)',
                                 icon: LucideIcons.lock,
                               );
+                              return;
+                            }
+                            if (!hasEnoughPhotos) {
+                              Navigator.pop(ctx);
+                              _showUploadRequiredDialog('Memory Match ($pairs Pairs)', minRequired: minPhotos);
                               return;
                             }
                             setModalState(() => selectedPairs = pairs);
@@ -1119,8 +1139,11 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                                   children: [
                                     Row(
                                       children: [
-                                        if (!isUnlocked) ...[
+                                        if (!isProgressUnlocked) ...[
                                           const Icon(LucideIcons.lock, size: 14, color: Colors.white38),
+                                          const SizedBox(width: 6),
+                                        ] else if (!hasEnoughPhotos) ...[
+                                          const Icon(LucideIcons.images, size: 14, color: AppColors.primaryOrange),
                                           const SizedBox(width: 6),
                                         ],
                                         Text(
@@ -1141,7 +1164,9 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                                         fontSize: 11,
                                         color: isSel
                                             ? Colors.white70
-                                            : (isUnlocked ? AppColors.accentEmerald : Colors.white30),
+                                            : (!hasEnoughPhotos && isProgressUnlocked
+                                                ? AppColors.primaryOrange
+                                                : (isUnlocked ? AppColors.accentEmerald : Colors.white30)),
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -1182,19 +1207,55 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
     );
   }
 
-  void _showUploadRequiredDialog(String gameName) {
+  void _showUploadRequiredDialog(String gameName, {int minRequired = 1}) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.backgroundSecondary,
-        title: Text('$gameName needs Photos'),
-        content: const Text(
-          'Please upload at least 1 photo in your Photo Vault to play with your own memories!',
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: AppColors.glassBorder),
+        ),
+        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+        contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        title: Row(
+          children: [
+            const Icon(LucideIcons.images, color: AppColors.primaryOrange, size: 24),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                minRequired > 1 ? '$minRequired Photos Needed' : '$gameName needs Photos',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.textPrimary),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          minRequired > 1
+              ? '$gameName requires at least $minRequired photos in your Photo Vault so each card pair has a unique photo.\n\nYou currently have ${_photos.length} of $minRequired photos.'
+              : 'Please upload at least 1 photo in your Photo Vault to play with your own memories!',
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.4),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK', style: TextStyle(color: AppColors.primary)),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryOrange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              elevation: 0,
+            ),
+            icon: const Icon(LucideIcons.upload, size: 16),
+            label: const Text('Upload Photos', style: TextStyle(fontWeight: FontWeight.bold)),
+            onPressed: () {
+              Navigator.pop(ctx);
+              widget.onNavigateTab?.call(3);
+            },
           ),
         ],
       ),
@@ -2050,10 +2111,17 @@ class _PhotoLibraryScreenState extends State<PhotoLibraryScreen> {
       }
     } catch (e) {
       if (mounted) {
+        String msg = e.toString().replaceFirst('Exception: ', '');
+        if (msg.contains('SocketException') ||
+            msg.contains('Failed host lookup') ||
+            msg.contains('ClientException') ||
+            msg.contains('errno = 7')) {
+          msg = 'Network connection issue. Please check your internet connection and try again.';
+        }
         await showAppNoticeDialog(
           context,
           title: 'Upload Failed',
-          message: 'Upload failed: $e',
+          message: msg,
           icon: LucideIcons.circleAlert,
         );
       }

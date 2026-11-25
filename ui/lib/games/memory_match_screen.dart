@@ -54,9 +54,10 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen> {
   void _initCards() {
     cards = [];
     int count = widget.pairsCount;
+    final pool = List<String>.from(widget.photoUrls)..shuffle();
 
     for (int i = 0; i < count; i++) {
-      String url = widget.photoUrls[i % widget.photoUrls.length];
+      String url = pool[i % pool.length];
       cards.add(MemoryCardItem(id: i, imagePath: url));
       cards.add(MemoryCardItem(id: i, imagePath: url));
     }

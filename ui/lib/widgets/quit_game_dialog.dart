@@ -158,6 +158,8 @@ Future<void> showAppNoticeDialog(
   required String message,
   IconData icon = LucideIcons.circleAlert,
   String buttonLabel = 'OK',
+  String? actionLabel,
+  VoidCallback? onAction,
 }) async {
   return showDialog<void>(
     context: context,
@@ -187,17 +189,37 @@ Future<void> showAppNoticeDialog(
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.4),
       ),
       actions: [
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryOrange,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
-            elevation: 0,
+        if (actionLabel != null && onAction != null) ...[
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(buttonLabel, style: const TextStyle(color: AppColors.textMuted)),
           ),
-          onPressed: () => Navigator.pop(ctx),
-          child: Text(buttonLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
-        ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryOrange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              elevation: 0,
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              onAction();
+            },
+            child: Text(actionLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ] else
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryOrange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+              elevation: 0,
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(buttonLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
+          ),
       ],
     ),
   );

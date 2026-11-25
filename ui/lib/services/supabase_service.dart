@@ -101,18 +101,41 @@ class SupabaseService {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final storagePath = '${user.id}/photo_$timestamp.jpg';
 
-    await client.storage.from('user-photos').uploadBinary(
-          storagePath,
-          compressedBytes,
-          fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
-        );
+    const int maxAttempts = 3;
+    dynamic lastError;
 
-    await client.from('photos').insert({
-      'user_id': user.id,
-      'photo_name': pickedFile.name,
-      'storage_path': storagePath,
-      'file_size_kb': compressedBytes.length ~/ 1024,
-    });
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await client.storage.from('user-photos').uploadBinary(
+              storagePath,
+              compressedBytes,
+              fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
+            );
+
+        await client.from('photos').insert({
+          'user_id': user.id,
+          'photo_name': pickedFile.name,
+          'storage_path': storagePath,
+          'file_size_kb': compressedBytes.length ~/ 1024,
+        });
+
+        return;
+      } catch (e) {
+        lastError = e;
+        if (attempt < maxAttempts) {
+          await Future.delayed(Duration(milliseconds: attempt * 1200));
+        }
+      }
+    }
+
+    final errStr = lastError.toString();
+    if (errStr.contains('SocketException') ||
+        errStr.contains('Failed host lookup') ||
+        errStr.contains('ClientException') ||
+        errStr.contains('errno = 7')) {
+      throw Exception('Network connection issue. Please check your internet connection and try again.');
+    }
+    throw lastError;
   }
 
   static Future<void> deletePhoto(PhotoItem photo) async {

@@ -3,6 +3,7 @@ import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'cartoon_service.dart';
+import 'api_service.dart';
 
 class PhotoItem {
   final String id;
@@ -382,9 +383,26 @@ class SupabaseService {
           .select()
           .order('points', ascending: false)
           .limit(limit);
-      return List<Map<String, dynamic>>.from(response);
-    } catch (_) {
-      return [];
-    }
+  /// Checks if a username is already taken by another player
+  static Future<bool> isUsernameTaken(String username) async {
+    final clean = username.trim();
+    if (clean.isEmpty) return false;
+
+    try {
+      // 1. Direct Supabase query (case-insensitive)
+      final existing = await client
+          .from('profiles')
+          .select('id')
+          .ilike('username', clean)
+          .maybeSingle();
+      if (existing != null) return true;
+    } catch (_) {}
+
+    try {
+      // 2. Secondary check via Spring Boot backend API
+      return await ApiService().checkUsernameExists(clean);
+    } catch (_) {}
+
+    return false;
   }
 }

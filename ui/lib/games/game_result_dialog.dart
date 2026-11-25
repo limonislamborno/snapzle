@@ -80,18 +80,18 @@ class _GameResultDialogState extends State<GameResultDialog> {
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.5,
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 Text(
                   widget.gameTitle,
-                  style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 13),
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                 ),
                 const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.06),
+                    color: AppColors.surfaceMuted,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: AppColors.glassBorder),
                   ),
@@ -199,9 +199,9 @@ class _GameResultDialogState extends State<GameResultDialog> {
         const SizedBox(height: 4),
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 10,
-            color: Colors.white.withOpacity(0.55),
+            color: AppColors.textSecondary,
             letterSpacing: 0.8,
           ),
         ),

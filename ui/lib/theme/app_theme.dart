@@ -1,51 +1,81 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
-  static const Color background = Color(0xFF07041A);
-  static const Color backgroundSecondary = Color(0xFF0B0724);
+  // Off-white / Warm Ivory backgrounds
+  static const Color background = Color(0xFFF7F5F0); // Elegant warm off-white
+  static const Color backgroundSecondary = Color(0xFFFFFFFF); // Pure white cards & dialogs
+  static const Color surfaceMuted = Color(0xFFEDE9E3); // Soft elevated container surface
   
-  // Neon accents
-  static const Color primary = Color(0xFF8B5CF6);
-  static const Color primaryBlue = Color(0xFF3B82F6);
-  static const Color accentPink = Color(0xFFEC4899);
-  static const Color accentCyan = Color(0xFF06B6D4);
-  static const Color accentEmerald = Color(0xFF10B981);
-  static const Color accentAmber = Color(0xFFF59E0B);
+  // Brand Accents: Deep Orange & Royal Purple
+  static const Color primary = Color(0xFF7C3AED); // Royal Purple
+  static const Color primaryOrange = Color(0xFFEA580C); // Deep Orange
+  static const Color primaryBlue = Color(0xFF2563EB);
+  static const Color accentPink = Color(0xFFDB2777);
+  static const Color accentCyan = Color(0xFF0284C7);
+  static const Color accentEmerald = Color(0xFF059669);
+  static const Color accentAmber = Color(0xFFD97706);
 
-  // Glass colors
-  static final Color glassFill = Colors.white.withOpacity(0.08);
-  static final Color glassBorder = Colors.white.withOpacity(0.18);
-  static final Color glassStrong = const Color(0xFF160E3A).withOpacity(0.85);
+  // High-contrast Typography
+  static const Color textPrimary = Color(0xFF0F172A); // Slate 900
+  static const Color textSecondary = Color(0xFF475569); // Slate 600
+  static const Color textMuted = Color(0xFF94A3B8); // Slate 400
 
-  // Gradients
+  // Cards & Borders
+  static const Color glassFill = Color(0xFFFFFFFF);
+  static const Color glassBorder = Color(0xFFE2E8F0);
+  static const Color glassStrong = Color(0xFFFFFFFF);
+
+  // Gradients: Deep Orange & Royal Purple
   static const LinearGradient brandGradient = LinearGradient(
-    colors: [primary, primaryBlue],
+    colors: [primaryOrange, primary],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient orangeGradient = LinearGradient(
+    colors: [Color(0xFFFB923C), Color(0xFFEA580C)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient purpleGradient = LinearGradient(
+    colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient textGradient = LinearGradient(
-    colors: [Color(0xFFC4B5FD), Color(0xFF93C5FD), Color(0xFF67E8F9)],
+    colors: [primaryOrange, primary],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
 }
 
 class AppTheme {
-  static ThemeData get darkTheme {
-    return ThemeData.dark().copyWith(
+  static ThemeData get appTheme {
+    return ThemeData.light().copyWith(
       scaffoldBackgroundColor: AppColors.background,
       primaryColor: AppColors.primary,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
-        secondary: AppColors.primaryBlue,
+        secondary: AppColors.primaryOrange,
         surface: AppColors.backgroundSecondary,
       ),
-      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).apply(
-        bodyColor: Colors.white,
-        displayColor: Colors.white,
+      textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme).apply(
+        bodyColor: AppColors.textPrimary,
+        displayColor: AppColors.textPrimary,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
+        titleTextStyle: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Colors.white,
+        selectedItemColor: AppColors.primaryOrange,
+        unselectedItemColor: AppColors.textMuted,
       ),
     );
   }

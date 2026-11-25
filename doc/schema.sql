@@ -147,10 +147,11 @@ ALTER TABLE public.user_achievements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.daily_challenges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_challenge_progress ENABLE ROW LEVEL SECURITY;
 
--- Profiles: Public read, private update
+-- Profiles: Public read by all (anon & authenticated for registration checks & leaderboards), private update
 DROP POLICY IF EXISTS "Public profiles are viewable by all authenticated users" ON public.profiles;
-CREATE POLICY "Public profiles are viewable by all authenticated users"
-    ON public.profiles FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Public profiles are viewable by all" ON public.profiles;
+CREATE POLICY "Public profiles are viewable by all"
+    ON public.profiles FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 CREATE POLICY "Users can update their own profile"

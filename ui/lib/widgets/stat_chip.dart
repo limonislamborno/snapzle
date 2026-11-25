@@ -36,15 +36,15 @@ class StatChip extends StatelessWidget {
               Text(
                 value,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
               ),
               Text(
                 label,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.6),
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
                   fontSize: 10,
                 ),
               ),

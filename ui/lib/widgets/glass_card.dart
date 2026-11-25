@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
@@ -22,35 +21,29 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget content = ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: Container(
-          padding: padding,
-          decoration: BoxDecoration(
-            color: isStrong ? AppColors.glassStrong : AppColors.glassFill,
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: AppColors.glassBorder, width: 1.0),
-            boxShadow: glowColor != null
-                ? [
-                    BoxShadow(
-                      color: glowColor!.withOpacity(0.35),
-                      blurRadius: 24,
-                      spreadRadius: 1,
-                    )
-                  ]
-                : [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.35),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    )
-                  ],
-          ),
-          child: child,
-        ),
+    Widget content = Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: isStrong ? AppColors.glassStrong : AppColors.glassFill,
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: Border.all(color: AppColors.glassBorder, width: 1.0),
+        boxShadow: glowColor != null
+            ? [
+                BoxShadow(
+                  color: glowColor!.withValues(alpha: 0.16),
+                  blurRadius: 18,
+                  offset: const Offset(0, 4),
+                )
+              ]
+            : [
+                BoxShadow(
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+                  blurRadius: 14,
+                  offset: const Offset(0, 3),
+                )
+              ],
       ),
+      child: child,
     );
 
     if (onTap != null) {

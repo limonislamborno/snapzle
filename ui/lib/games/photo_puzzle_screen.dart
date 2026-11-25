@@ -182,7 +182,7 @@ class _PhotoPuzzleScreenState extends State<PhotoPuzzleScreen> {
                   children: [
                     CircularProgressIndicator(),
                     SizedBox(height: 16),
-                    Text('Slicing your photo into puzzle pieces...', style: TextStyle(color: Colors.white70)),
+                    Text('Slicing your photo into puzzle pieces...', style: const TextStyle(color: AppColors.textSecondary)),
                   ],
                 ),
               )
@@ -247,37 +247,12 @@ class _PhotoPuzzleScreenState extends State<PhotoPuzzleScreen> {
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(9),
-                                      child: Stack(
-                                        fit: StackFit.expand,
-                                        children: [
-                                          CustomPaint(
-                                            painter: _TileImagePainter(
-                                              image: _decodedImage,
-                                              tileIndex: tileValue,
-                                              gridDim: widget.gridDim,
-                                            ),
-                                          ),
-                                          Align(
-                                            alignment: Alignment.bottomRight,
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: Colors.black.withValues(alpha: 0.55),
-                                                borderRadius: const BorderRadius.only(
-                                                  topLeft: Radius.circular(6),
-                                                ),
-                                              ),
-                                              child: Text(
-                                                '${tileValue + 1}',
-                                                style: const TextStyle(
-                                                  fontSize: 10,
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                      child: CustomPaint(
+                                        painter: _TileImagePainter(
+                                          image: _decodedImage,
+                                          tileIndex: tileValue,
+                                          gridDim: widget.gridDim,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -291,7 +266,7 @@ class _PhotoPuzzleScreenState extends State<PhotoPuzzleScreen> {
                     const SizedBox(height: 16),
                     Text(
                       'Tap one piece and then another to swap them.',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                     ),
                   ],
                 ),

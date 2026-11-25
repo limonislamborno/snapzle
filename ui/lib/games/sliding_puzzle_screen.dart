@@ -211,7 +211,7 @@ class _SlidingPuzzleScreenState extends State<SlidingPuzzleScreen> {
                     SizedBox(height: 16),
                     Text(
                       'Slicing your photo into sliding tiles...',
-                      style: TextStyle(color: Colors.white70),
+                      style: const TextStyle(color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -303,45 +303,19 @@ class _SlidingPuzzleScreenState extends State<SlidingPuzzleScreen> {
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(9),
-                                      child: Stack(
-                                        fit: StackFit.expand,
-                                        children: [
-                                          if (_decodedImage != null)
-                                            CustomPaint(
+                                      child: _decodedImage != null
+                                          ? CustomPaint(
                                               painter: _TileImagePainter(
                                                 image: _decodedImage,
                                                 tileIndex: val,
                                                 gridDim: widget.gridDim,
                                               ),
                                             )
-                                          else
-                                            Container(
-                                              decoration: BoxDecoration(
+                                          : Container(
+                                              decoration: const BoxDecoration(
                                                 gradient: AppColors.brandGradient,
                                               ),
                                             ),
-                                          Align(
-                                            alignment: Alignment.bottomRight,
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: Colors.black.withValues(alpha: 0.65),
-                                                borderRadius: const BorderRadius.only(
-                                                  topLeft: Radius.circular(6),
-                                                ),
-                                              ),
-                                              child: Text(
-                                                '${val + 1}',
-                                                style: const TextStyle(
-                                                  fontSize: 11,
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
                                     ),
                                   ),
                                 );
@@ -354,7 +328,7 @@ class _SlidingPuzzleScreenState extends State<SlidingPuzzleScreen> {
                     const SizedBox(height: 16),
                     Text(
                       'Tap any tile adjacent to the empty slot to slide it.',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                     ),
                   ],
                 ),

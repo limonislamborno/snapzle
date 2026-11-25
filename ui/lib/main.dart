@@ -38,7 +38,7 @@ class SnapzleApp extends StatelessWidget {
     return MaterialApp(
       title: 'Snapzle',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.appTheme,
       home: const AuthGate(),
     );
   }
@@ -84,40 +84,74 @@ class _MainShellScreenState extends State<MainShellScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Ambient Gaming Glows Background
+          // Ambient Warm Orange Bubbles Background
           Positioned(
-            top: -60,
-            left: -40,
-            child: Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.35),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 80,
-            right: -60,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.accentPink.withValues(alpha: 0.25),
+            top: -50,
+            right: -30,
+            child: IgnorePointer(
+              child: Container(
+                width: 220,
+                height: 220,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primaryOrange.withValues(alpha: 0.10),
+                ),
               ),
             ),
           ),
           Positioned(
             top: 250,
-            right: -30,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primaryBlue.withValues(alpha: 0.25),
+            left: -40,
+            child: IgnorePointer(
+              child: Container(
+                width: 170,
+                height: 170,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFB923C).withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 50,
+            right: -25,
+            child: IgnorePointer(
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primaryOrange.withValues(alpha: 0.09),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 130,
+            left: 20,
+            child: IgnorePointer(
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primaryOrange.withValues(alpha: 0.13),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 180,
+            left: 25,
+            child: IgnorePointer(
+              child: Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFB923C).withValues(alpha: 0.14),
+                ),
               ),
             ),
           ),
@@ -139,7 +173,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: AppColors.backgroundSecondary.withValues(alpha: 0.85),
+          color: Colors.white,
           border: Border(top: BorderSide(color: AppColors.glassBorder)),
         ),
         child: BottomNavigationBar(
@@ -156,8 +190,10 @@ class _MainShellScreenState extends State<MainShellScreen> {
           },
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.transparent,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: Colors.white54,
+          selectedItemColor: AppColors.primaryOrange,
+          unselectedItemColor: AppColors.textMuted,
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
           elevation: 0,
           items: const [
             BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: 'Home'),
@@ -289,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Text(
                               _avatarStyle == 'cartoon' ? '⚡ Cartoon Avatar Active' : '📷 Original Photo Active',
                               style: TextStyle(
-                                color: _avatarStyle == 'cartoon' ? AppColors.accentCyan : Colors.white60,
+                                color: _avatarStyle == 'cartoon' ? AppColors.primaryOrange : AppColors.textSecondary,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -303,17 +339,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
+                      color: AppColors.surfaceMuted,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: AppColors.glassBorder),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _heroMetric('GLOBAL RANK', _rank, AppColors.accentAmber, LucideIcons.trophy),
-                        Container(width: 1, height: 32, color: Colors.white12),
-                        _heroMetric('TOTAL POINTS', '$_points pts', AppColors.accentCyan, LucideIcons.sparkles),
-                        Container(width: 1, height: 32, color: Colors.white12),
+                        _heroMetric('GLOBAL RANK', _rank, AppColors.primaryOrange, LucideIcons.trophy),
+                        Container(width: 1, height: 32, color: AppColors.glassBorder),
+                        _heroMetric('TOTAL POINTS', '$_points pts', AppColors.primary, LucideIcons.sparkles),
+                        Container(width: 1, height: 32, color: AppColors.glassBorder),
                         _heroMetric('GAMES WON', '$_gamesPlayed', AppColors.accentEmerald, LucideIcons.gamepad2),
                       ],
                     ),
@@ -410,9 +446,9 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 9,
-            color: Colors.white.withValues(alpha: 0.55),
+            color: AppColors.textSecondary,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.6,
           ),
@@ -457,9 +493,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 3),
-                  Text(rule, style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 11, fontFamily: 'monospace')),
+                  Text(rule, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontFamily: 'monospace')),
                   const SizedBox(height: 2),
-                  Text(tip, style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 10)),
+                  Text(tip, style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
                 ],
               ),
             ),
@@ -1281,9 +1317,9 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                         child: Text(
                           difficultyMeta,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: AppColors.textSecondary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -1302,8 +1338,8 @@ class _GamesHubScreenState extends State<GamesHubScreen> {
                   const SizedBox(height: 3),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.65),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
                       fontSize: 12,
                       height: 1.25,
                     ),
@@ -1455,7 +1491,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                   '#$rank',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: isMe ? AppColors.primary : Colors.white.withValues(alpha: 0.6),
+                                    color: isMe ? AppColors.primaryOrange : AppColors.textSecondary,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -1476,7 +1512,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                           style: TextStyle(
                                             fontWeight: isMe ? FontWeight.bold : FontWeight.w600,
                                             fontSize: 14,
-                                            color: isMe ? Colors.white : Colors.white.withValues(alpha: 0.9),
+                                            color: isMe ? AppColors.primaryOrange : AppColors.textPrimary,
                                           ),
                                         ),
                                       ),
@@ -1632,7 +1668,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               style: TextStyle(
                 fontWeight: isMe ? FontWeight.w900 : FontWeight.bold,
                 fontSize: 12,
-                color: isMe ? Colors.white : Colors.white.withValues(alpha: 0.9),
+                color: isMe ? AppColors.primaryOrange : AppColors.textPrimary,
               ),
             ),
           ),
@@ -1796,7 +1832,7 @@ class _PhotoLibraryScreenState extends State<PhotoLibraryScreen> {
                   ),
                   Text(
                     '${_photos.length} of 10 slots used (Private & Encrypted)',
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                   ),
                 ],
               ),
@@ -1816,16 +1852,16 @@ class _PhotoLibraryScreenState extends State<PhotoLibraryScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(LucideIcons.images, size: 54, color: Colors.white.withValues(alpha: 0.3)),
+                              Icon(LucideIcons.images, size: 54, color: AppColors.primaryOrange.withValues(alpha: 0.35)),
                               const SizedBox(height: 12),
                               const Text(
                                 'No photos uploaded yet',
                                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                               ),
                               const SizedBox(height: 6),
-                              Text(
+                              const Text(
                                 'Upload at least 5 photos to unlock all puzzle games.',
-                                style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                                 textAlign: TextAlign.center,
                               ),
                             ],
@@ -2094,11 +2130,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 12),
                 Text(
                   username,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                 ),
                 Text(
                   '$email (Private)',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.54), fontSize: 12),
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                 ),
                 const SizedBox(height: 12),
                 if (_avatarUrl != null) ...[
@@ -2106,7 +2142,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: AppColors.glassFill,
+                      color: AppColors.surfaceMuted,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: AppColors.glassBorder),
                     ),
@@ -2132,10 +2168,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ] else ...[
                   TextButton.icon(
                     onPressed: _isUploading ? null : _pickAndUploadAvatar,
-                    icon: const Icon(LucideIcons.upload, size: 16, color: AppColors.accentCyan),
+                    icon: const Icon(LucideIcons.upload, size: 16, color: AppColors.primaryOrange),
                     label: const Text(
                       'Upload Avatar Photo',
-                      style: TextStyle(color: AppColors.accentCyan, fontSize: 13, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: AppColors.primaryOrange, fontSize: 13, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -2148,13 +2184,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               children: [
                 _profileRow(LucideIcons.shieldAlert, 'Global Rank', _rank),
-                const Divider(color: Colors.white12),
+                const Divider(color: AppColors.glassBorder),
                 _profileRow(LucideIcons.sparkles, 'Total Points', '$_points pts'),
-                const Divider(color: Colors.white12),
+                const Divider(color: AppColors.glassBorder),
                 _profileRow(LucideIcons.gamepad2, 'Games Played', '$_gamesPlayed'),
-                const Divider(color: Colors.white12),
+                const Divider(color: AppColors.glassBorder),
                 _profileRow(LucideIcons.medal, 'Player Level', 'Level $level'),
-                const Divider(color: Colors.white12),
+                const Divider(color: AppColors.glassBorder),
                 _profileRow(LucideIcons.shieldCheck, 'Privacy & Photos', '100% Private'),
               ],
             ),
@@ -2187,20 +2223,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
+          color: isSelected ? AppColors.primaryOrange : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: isSelected ? Colors.white : Colors.white70),
+            Icon(icon, size: 14, color: isSelected ? Colors.white : AppColors.textSecondary),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? Colors.white : Colors.white70,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                color: isSelected ? Colors.white : AppColors.textSecondary,
               ),
             ),
           ],
@@ -2214,14 +2250,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.accentCyan, size: 20),
+          Icon(icon, color: AppColors.primaryOrange, size: 20),
           const SizedBox(width: 12),
-          Text(title, style: const TextStyle(fontSize: 14)),
+          Text(title, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
           const Spacer(),
           Text(
             val,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 13,
             ),

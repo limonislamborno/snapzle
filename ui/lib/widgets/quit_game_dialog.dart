@@ -13,7 +13,7 @@ Future<bool> showQuitGameConfirmation(BuildContext context) async {
       ),
       title: const Row(
         children: [
-          Icon(LucideIcons.circleAlert, color: AppColors.accentPink, size: 24),
+          Icon(LucideIcons.circleAlert, color: AppColors.primaryOrange, size: 24),
           SizedBox(width: 10),
           Text(
             'Quit Game?',
@@ -23,19 +23,19 @@ Future<bool> showQuitGameConfirmation(BuildContext context) async {
       ),
       content: const Text(
         'Are you sure you want to leave? Your current puzzle progress will be lost.',
-        style: TextStyle(color: Colors.white70, fontSize: 14),
+        style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),
           child: const Text(
             'Keep Playing',
-            style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+            style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
           ),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.accentPink,
+            backgroundColor: AppColors.primaryOrange,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
-  // Update this to your deployed Render URL or local network IP for testing
-  static const String baseUrl = 'http://10.0.2.2:8080/api'; 
+  // Deployed live backend on Render
+  static const String baseUrl = 'https://snapzle.onrender.com/api'; 
 
   final Dio _dio = Dio(BaseOptions(
     baseUrl: baseUrl,
@@ -56,6 +56,16 @@ class ApiService {
   Future<List<dynamic>> getGlobalLeaderboard({int limit = 50}) async {
     final response = await _dio.get('/public/leaderboard/global', queryParameters: {'limit': limit});
     return response.data;
+  }
+
+  // Username Availability Check
+  Future<bool> checkUsernameExists(String username) async {
+    try {
+      final response = await _dio.get('/public/check-username', queryParameters: {'username': username});
+      return response.data['exists'] == true;
+    } catch (_) {
+      return false;
+    }
   }
 
   // User Profile

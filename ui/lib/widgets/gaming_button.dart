@@ -10,6 +10,7 @@ class GamingButton extends StatelessWidget {
   final Color? color;
   final Color? textColor;
   final Border? border;
+  final Gradient? gradient;
 
   const GamingButton({
     super.key,
@@ -21,19 +22,22 @@ class GamingButton extends StatelessWidget {
     this.color,
     this.textColor,
     this.border,
+    this.gradient,
   });
 
   @override
   Widget build(BuildContext context) {
     final effectiveTextColor = textColor ?? Colors.white;
+    final effectiveGradient = gradient ?? (color == null ? AppColors.brandGradient : null);
+    final shadowColor = effectiveGradient is LinearGradient && effectiveGradient.colors.isNotEmpty
+        ? effectiveGradient.colors.first
+        : (color ?? AppColors.primaryOrange);
 
     return Container(
       width: fullWidth ? double.infinity : null,
       decoration: BoxDecoration(
-        gradient: color != null
-            ? null
-            : AppColors.brandGradient,
-        color: color,
+        gradient: effectiveGradient,
+        color: effectiveGradient == null ? color : null,
         borderRadius: BorderRadius.circular(16),
         border: border,
         boxShadow: color != null && border != null
@@ -46,7 +50,7 @@ class GamingButton extends StatelessWidget {
               ]
             : [
                 BoxShadow(
-                  color: (color ?? AppColors.primaryOrange).withValues(alpha: 0.35),
+                  color: shadowColor.withValues(alpha: 0.35),
                   blurRadius: 18,
                   offset: const Offset(0, 4),
                 )

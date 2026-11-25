@@ -543,7 +543,7 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> with SingleTick
           ),
           title: Row(
             children: const [
-              Icon(LucideIcons.shieldCheck, color: AppColors.primary, size: 22),
+              Icon(LucideIcons.shieldCheck, color: AppColors.primaryOrange, size: 22),
               SizedBox(width: 8),
               Text(
                 'Snapzle Admin Console',

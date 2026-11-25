@@ -2577,7 +2577,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             GamingButton(
               label: '👑 Admin Console',
               icon: LucideIcons.shieldCheck,
-              color: AppColors.primary,
+              gradient: AppColors.orangeGradient,
               textColor: Colors.white,
               onPressed: () {
                 MainShellScreen.switchTab(5);

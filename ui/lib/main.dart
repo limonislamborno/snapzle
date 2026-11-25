@@ -2731,11 +2731,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    Container(
-                      decoration: BoxDecoration(
-                        color: resetGames ? AppColors.primaryOrange.withValues(alpha: 0.08) : AppColors.surfaceMuted,
+                    Material(
+                      color: resetGames ? AppColors.primaryOrange.withValues(alpha: 0.08) : AppColors.surfaceMuted,
+                      borderRadius: BorderRadius.circular(12),
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
+                        side: BorderSide(
                           color: resetGames ? AppColors.primaryOrange : AppColors.glassBorder,
                           width: 1.2,
                         ),
@@ -2757,11 +2758,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    Container(
-                      decoration: BoxDecoration(
-                        color: resetPhotos ? Colors.redAccent.withValues(alpha: 0.08) : AppColors.surfaceMuted,
+                    Material(
+                      color: resetPhotos ? Colors.redAccent.withValues(alpha: 0.08) : AppColors.surfaceMuted,
+                      borderRadius: BorderRadius.circular(12),
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
+                        side: BorderSide(
                           color: resetPhotos ? Colors.redAccent : AppColors.glassBorder,
                           width: 1.2,
                         ),
